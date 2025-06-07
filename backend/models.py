@@ -14,13 +14,16 @@ DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
 
 DATABASE_URL = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
-print(f'DATABASE_URL = {DATABASE_URL}')
 
 
-class Base(DeclarativeBase): pass
+class Base(DeclarativeBase):
+    """Base class for all models."""
+    pass
 
-# defines a structure of 'users' table in the database
-class User(Base): 
+
+class User(Base):
+    """Defines the structure of the 'users' table in the database."""
+
     __tablename__ = 'users'
     
     # Define table attributes
@@ -32,16 +35,20 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.now(timezone.utc))
     
     def set_password(self, password):
+        """Hashes and sets the user's password."""
         self.password_hash = generate_password_hash(password)
         
     def check_password(self, password):
+        """Checks if the provided password matches the stored hash."""
         return check_password_hash(self.password_hash, password)
 
 class Review(DeclarativeBase): pass # TBD
 
+# Database setup
 engine = create_engine(DATABASE_URL) 
 Session = sessionmaker(bind=engine)
 
 
 def init_db():
+    """Initializes the database by creating all tables."""
     Base.metadata.create_all(engine)
