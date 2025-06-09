@@ -2,4 +2,4 @@ flask
 SQLAlchemy
 werkzeug
 psycopg2-binary
-jwt
+PyJWT

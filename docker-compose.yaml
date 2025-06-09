@@ -29,6 +29,7 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_NAME: ${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
     ports:
       - "5000:5000"
     depends_on:

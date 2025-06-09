@@ -44,7 +44,7 @@ def register():
 
 @app.route("/api/auth/login", methods=["POST"])
 def login():
-    data = request.get_data()
+    data = request.get_json()
     session = Session()
 
     user = session.query(User).filter_by(email=data["email"]).first()
@@ -62,7 +62,7 @@ def login():
         return jsonify({"token": token})
 
 
-@app.route("/api/userd", method=["GET"])
+@app.route("/api/users", methods=["GET"])
 def get_users():
     session = Session()
     users = session.query(User).all()
