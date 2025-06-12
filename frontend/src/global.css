@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
 
-header-font-mono {
+.header-font-mono {
   font-family: 'IBM Plex Mono', monospace;
 }

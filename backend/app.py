@@ -1,8 +1,10 @@
 from flask import Flask
+from flask_cors import CORS
 from models import init_db
 from auth.auth import auth_bp
 
 app = Flask(__name__)
+CORS(app)
 
 # Initialize database
 init_db()
