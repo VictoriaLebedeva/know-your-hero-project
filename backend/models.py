@@ -54,11 +54,9 @@ class Review(Base):
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)   # User who wrote the review
     created_at = Column(DateTime, default=datetime.now(timezone.utc))   
     
-    # Relationships (optional for easier queries)
+    # Relationships
     adresed = relationship("User", foreign_keys=[adresed_id])  # Connects to reviewed user
     author = relationship("User", foreign_keys=[author_id])    # Connects to review author
-
-
 
 # Database setup
 engine = create_engine(DATABASE_URL)

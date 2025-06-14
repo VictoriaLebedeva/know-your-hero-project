@@ -1,7 +1,7 @@
 import os
 import jwt
 from flask import Blueprint, request, jsonify, make_response
-from models import init_db, Session, User
+from models import Session, User
 from datetime import datetime, timedelta, timezone
 
 
@@ -10,7 +10,6 @@ auth_bp = Blueprint("auth_bp", __name__)
 
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
-
 
 @auth_bp.route("/api/auth/register", methods=["POST"])
 def register():
@@ -69,8 +68,7 @@ def login():
             secure=False,  # for localhost testing
             samesite=None
         )
-        return response
-        
+        return response     
 
 
 @auth_bp.route("/api/users", methods=["GET"])
