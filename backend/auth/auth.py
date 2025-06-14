@@ -1,5 +1,6 @@
 import os
 import jwt
+from utils import verify_token
 from flask import Blueprint, request, jsonify, make_response
 from models import Session, User
 from datetime import datetime, timedelta, timezone
@@ -87,3 +88,24 @@ def get_users():
             for user in users
         ]
     )
+    
+@auth_bp.route("/api/users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    """Fetch a specific user's information by ID."""
+    
+    if verify_token() is None:
+        return jsonify({"message": "Unathorized"}), 401    
+    
+    session = Session()
+    user = session.query(User).filter_by(id=user_id).first()
+    session.close()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify({
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "created_at": user.created_at.isoformat(),
+    })
