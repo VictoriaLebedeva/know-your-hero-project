@@ -54,16 +54,18 @@ def handle_reviews():
 
     
     reviews = session.query(Review).all()
+    print(reviews)
     session.close()
+    
     return jsonify(
         [
             {
                 "id": review.id,
-                "positive": reviews.positive,
-                "negative": reviews.negative,
-                "adresed_id": reviews.adresed_id,
-                "author_id": reviews.author_id,
-                "created_at": reviews.created_at,
+                "positive": review.positive,
+                "negative": review.negative,
+                "adresed_id": review.adresed_id,
+                "author_id": review.author_id,
+                "created_at": review.created_at,
             }
             for review in reviews
         ]
