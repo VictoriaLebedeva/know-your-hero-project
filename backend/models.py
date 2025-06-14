@@ -29,6 +29,7 @@ class User(Base):
     # Define table attributes
     id = Column(Integer, primary_key=True)
     email = Column(String(120), nullable=False, unique=True)
+    # add name property
     password_hash = Column(String(256), nullable=False)
     role = Column(String(20), nullable=False, default="collegue")
     created_at = Column(DateTime, default=datetime.now(timezone.utc))

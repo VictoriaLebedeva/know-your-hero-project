@@ -1,6 +1,6 @@
 import os
 import jwt
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 from models import init_db, Session, User
 from datetime import datetime, timedelta, timezone
 
@@ -47,16 +47,30 @@ def login():
     user = session.query(User).filter_by(email=data["email"]).first()
     session.close()
 
-    if user and user.check_password(data["password"]):
+    if not user:
+        return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
+    elif not user.check_password(data["password"]):
+        return jsonify({"message": f"Incorrect password"}), 401
+    else: 
+        response = make_response(jsonify({"message": "Login successful"}))
         token = jwt.encode(
             {
                 "user_id": user.id,
+                "role": user.role,
                 "exp": datetime.now(timezone.utc) + timedelta(hours=24),
             },
             SECRET_KEY,
             algorithm="HS256",
         )
-        return jsonify({"token": token})
+        response.set_cookie(
+            "access_token",
+            token,
+            httponly=True,  # Prevents JavaScript access (protects against XSS)
+            secure=False,  # for localhost testing
+            samesite=None
+        )
+        return response
+        
 
 
 @auth_bp.route("/api/users", methods=["GET"])

@@ -4,7 +4,7 @@ from models import init_db
 from auth.auth import auth_bp
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 # Initialize database
 init_db()

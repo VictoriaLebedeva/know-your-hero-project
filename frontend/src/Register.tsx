@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { FC } from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const Register: FC = () => {
 
@@ -25,7 +26,7 @@ const Register: FC = () => {
     e.preventDefault();
 
     if (formData.password !== formData.repeatPassword) {
-      alert("Passwords do not match. Check");
+      alert("Passwords do not match!");
       return;
     }
 
@@ -57,7 +58,7 @@ const Register: FC = () => {
           {"Know\nYour\nHero"}
         </h1>
         <h2 className="text-xl font-semibold">Create an account</h2>
-        <form onSubmit={(e) => handleSubmit(e)} noValidate className="space-y-4 mt-16">
+        <form onSubmit={(e) => handleSubmit(e)} className="space-y-4 mt-16">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" placeholder="yourname@example.com" required onChange={handleChange} />
@@ -74,6 +75,7 @@ const Register: FC = () => {
             <Label htmlFor="repeat-password">Repeat Password</Label>
             <Input id="repeatPassword" type="password" placeholder="Repeat password" required onChange={handleChange} />
           </div>
+          <p className="text-sm text-zinc-500">Already have an account? <Link className="underline" to="/login">Sign In</Link></p>
           <Button type="submit" className="mt-8 w-[85px] h-[40px] bg-primary text-white text-sm rounded-md">
             Sign Up
           </Button>
