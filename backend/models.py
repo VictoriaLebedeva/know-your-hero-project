@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timezone
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy import create_engine
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -29,11 +29,11 @@ class User(Base):
     # Define table attributes
     id = Column(Integer, primary_key=True)
     email = Column(String(120), nullable=False, unique=True)
-    # add name property
+    name = Column(String(256), nullable=False)
     password_hash = Column(String(256), nullable=False)
     role = Column(String(20), nullable=False, default="collegue")
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     def set_password(self, password):
         """Hashes and sets the user's password."""
@@ -43,9 +43,21 @@ class User(Base):
         """Checks if the provided password matches the stored hash."""
         return check_password_hash(self.password_hash, password)
 
+class Review(Base):
+    """Defines the structure of the 'reviews' table in the database."""
+    __tablename__ = "reviews"
+    
+    id = Column(Integer, primary_key=True)
+    positive = Column(String(1000), nullable=False)
+    negative = Column(String(1000), nullable=False)
+    adresed_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # User being reviewed
+    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)   # User who wrote the review
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))   
+    
+    # Relationships (optional for easier queries)
+    adresed = relationship("User", foreign_keys=[adresed_id])  # Connects to reviewed user
+    author = relationship("User", foreign_keys=[author_id])    # Connects to review author
 
-class Review(DeclarativeBase):
-    pass  # TBD
 
 
 # Database setup
