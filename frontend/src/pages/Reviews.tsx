@@ -1,7 +1,8 @@
-import { Button } from "@/components/ui/button";
-import Header from "@/components/header";
-import Footer from "@/components/Footer";
 import type { FC } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import {
     Table,
     TableBody,
@@ -9,7 +10,8 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+
 const Reviews: FC = () => {
 
     return (
@@ -43,5 +45,3 @@ const Reviews: FC = () => {
 };
 
 export default Reviews;
-
-

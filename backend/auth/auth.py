@@ -89,23 +89,23 @@ def get_users():
         ]
     )
     
-@auth_bp.route("/api/users/<int:user_id>", methods=["GET"])
-def get_user(user_id):
-    """Fetch a specific user's information by ID."""
+# @auth_bp.route("/api/users/<int:user_id>", methods=["GET"])
+# def get_user(user_id):
+#     """Fetch a specific user's information by ID."""
     
-    if verify_token() is None:
-        return jsonify({"message": "Unathorized"}), 401    
+#     if verify_token() is None:
+#         return jsonify({"message": "Unathorized"}), 401    
     
-    session = Session()
-    user = session.query(User).filter_by(id=user_id).first()
-    session.close()
+#     session = Session()
+#     user = session.query(User).filter_by(id=user_id).first()
+#     session.close()
 
-    if not user:
-        return jsonify({"message": "User not found"}), 404
+#     if not user:
+#         return jsonify({"message": "User not found"}), 404
 
-    return jsonify({
-        "id": user.id,
-        "email": user.email,
-        "role": user.role,
-        "created_at": user.created_at.isoformat(),
-    })
+#     return jsonify({
+#         "id": user.id,
+#         "email": user.email,
+#         "role": user.role,
+#         "created_at": user.created_at.isoformat(),
+#     })

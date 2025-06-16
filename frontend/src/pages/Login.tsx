@@ -2,11 +2,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import type { FC } from "react";
 import { useState } from "react";
 
 const Login: FC = () => {
 
+    const navigate = useNavigate();
+    
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -25,7 +28,6 @@ const Login: FC = () => {
         try {
             const response = await fetch("http://localhost:5000/api/auth/login", {
                 method: "POST",
-                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -36,7 +38,7 @@ const Login: FC = () => {
             });
             const data = await response.json()
             if (!response.ok) throw new Error(data.message);
-            alert(`TOKEN: ${data.message}`);
+            navigate("/reviews");
         } catch (error) {
             alert(`Login failed: ${(error as Error).message}`);
         }
