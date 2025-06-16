@@ -65,8 +65,8 @@ def login():
         response.set_cookie(
             "access_token",
             token,
-            httponly=True,  # Prevents JavaScript access (protects against XSS)
-            secure=False,  # for localhost testing
+            httponly=True,
+            secure=False,
             samesite=None
         )
         return response     
@@ -89,23 +89,28 @@ def get_users():
         ]
     )
     
-# @auth_bp.route("/api/users/<int:user_id>", methods=["GET"])
-# def get_user(user_id):
-#     """Fetch a specific user's information by ID."""
+@auth_bp.route("/api/me", methods=["GET"])
+def get_user():
+    """Fetch a specific user's information about authorized user."""
     
-#     if verify_token() is None:
-#         return jsonify({"message": "Unathorized"}), 401    
+    user_id = None
+    token_payload = verify_token(request)
     
-#     session = Session()
-#     user = session.query(User).filter_by(id=user_id).first()
-#     session.close()
+    if token_payload is None:
+        return jsonify({"message": "Unathorized"}), 401    
+    
+    user_id = token_payload.get("user_id")
+    
+    session = Session()
+    user = session.query(User).filter_by(id=user_id).first()
+    session.close()
 
-#     if not user:
-#         return jsonify({"message": "User not found"}), 404
+    if not user:
+        return jsonify({"message": "User not found"}), 404
 
-#     return jsonify({
-#         "id": user.id,
-#         "email": user.email,
-#         "role": user.role,
-#         "created_at": user.created_at.isoformat(),
-#     })
+    return jsonify({
+        "id": user.id,
+        "email": user.email,
+        "role": user.role,
+        "created_at": user.created_at.isoformat(),
+    })
