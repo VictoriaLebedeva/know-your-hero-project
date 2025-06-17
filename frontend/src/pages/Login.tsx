@@ -28,6 +28,7 @@ const Login: FC = () => {
         try {
             const response = await fetch("http://localhost:5000/api/auth/login", {
                 method: "POST",
+                credentials: 'include',
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -38,6 +39,7 @@ const Login: FC = () => {
             });
             const data = await response.json()
             if (!response.ok) throw new Error(data.message);
+            alert("Login successful!");
             navigate("/reviews");
         } catch (error) {
             alert(`Login failed: ${(error as Error).message}`);
