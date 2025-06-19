@@ -9,7 +9,7 @@ import { useState } from "react";
 const Login: FC = () => {
 
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -39,6 +39,15 @@ const Login: FC = () => {
             });
             const data = await response.json()
             if (!response.ok) throw new Error(data.message);
+            
+            // get user data
+            const meRes = await fetch("/api/me", { credentials: "include" });
+            if (!meRes.ok) throw new Error("Could not fetch user data");
+            const userData = await meRes.json();
+
+            // save user data into the local storage
+            localStorage.setItem("user", JSON.stringify(userData));
+
             alert("Login successful!");
             navigate("/reviews");
         } catch (error) {

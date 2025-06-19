@@ -16,23 +16,19 @@ const Reviews: FC = () => {
     const [userName, setUserName] = useState<string>("");
 
     useEffect(() => {
-        fetch("/api/me", {
-            credentials: 'include',
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.name) {
-                    setUserName(data.name);
-                }
-            })
-            .catch(() => setUserName(""));
+        const stored = localStorage.getItem("user");
+        if (stored) setUserName(JSON.parse(stored).name);
     }, []);
 
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
             <div className="flex justify-between items-center w-full">
                 <Header />
-                <p className="text-right font-semibold">How are you, {userName || "John Doe"}?</p>
+                <div className="relative text-right">
+                    <p className="text-right font-semibold">
+                        How are you, <span className="underline">{userName || "John Doe"}</span>?
+                    </p>
+                </div>
             </div>
             <main className="flex-grow flex flex-col items-start mt-8 space-y-[25px]">
                 <Button>+ Add Review</Button>
