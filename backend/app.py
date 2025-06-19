@@ -5,7 +5,7 @@ from auth.auth import auth_bp
 from reviews.reviews import reviews_bp
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
 
 # Initialize database
 init_db()

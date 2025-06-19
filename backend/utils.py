@@ -5,17 +5,17 @@ import os
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 def verify_token(request):
-    """Validates JWT token"""
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
+    """Validates JWT token from cookie"""
+    token = request.cookies.get("access_token")
+    if not token:
         return None
-
-    token = auth_header.split(" ")[1]
-    
     try:
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return decoded  # Return decoded user data if valid
+        return decoded
     except jwt.ExpiredSignatureError:
-        return None  # Token expired
-    except jwt.InvalidTokenError:
-        return None  # Invalid token
+        print("⚠️ Token Expired")
+        return None
+    except jwt.InvalidTokenError as e:
+        print("⚠️ Incalid token:", e)
+        return None
+

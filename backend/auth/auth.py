@@ -42,8 +42,9 @@ def register():
 @auth_bp.route("/api/auth/login", methods=["POST"])
 def login():
     data = request.get_json()
+    if not data or "email" not in data or "password" not in data:
+        return jsonify({"message": "Email and password are required"}), 400
     session = Session()
-
     user = session.query(User).filter_by(email=data["email"]).first()
     session.close()
 
@@ -67,7 +68,7 @@ def login():
             token,
             httponly=True,
             secure=False,
-            samesite=None
+            samesite="Lax"
         )
         return response     
 
@@ -76,7 +77,7 @@ def login():
 def get_users():
     session = Session()
     users = session.query(User).all()
-
+    
     return jsonify(
         [
             {
@@ -110,6 +111,7 @@ def get_user():
 
     return jsonify({
         "id": user.id,
+        "name": user.name,
         "email": user.email,
         "role": user.role,
         "created_at": user.created_at.isoformat(),
