@@ -26,13 +26,23 @@ const Reviews: FC = () => {
         created_at: string;
     };
 
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [userName, setUserName] = useState<string>("");
+    type CurrentUser = {
+        id: number;
+        name: string;
+        email: string;
+        role: string;
+        created_at: string;
+    }
 
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [user, setUser] = useState<CurrentUser | null>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem("user");
-        if (stored) setUserName(JSON.parse(stored).name);
+        if (stored) {
+            const parsedUser = JSON.parse(stored);
+            setUser(parsedUser);
+        }
 
         fetch("/api/reviews", { credentials: "include" })
             .then(res => res.json())
@@ -42,13 +52,15 @@ const Reviews: FC = () => {
 
     }, []);
 
+    const userName = user?.name ?? "John Doe";
+
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
             <div className="flex justify-between items-center w-full">
                 <Header />
                 <div className="relative text-right">
                     <p className="text-right font-semibold">
-                        How are you, <span className="underline">{userName || "John Doe"}</span>?
+                        How are you, <span className="underline">{userName}</span>?
                     </p>
                 </div>
             </div>
