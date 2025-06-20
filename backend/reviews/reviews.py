@@ -11,10 +11,12 @@ reviews_bp = Blueprint("reviews_bp", __name__)
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-@reviews_bp.route("/reviews", methods=["GET", "POST"])
+@reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():
+    
+    print(request.cookies)
 
-    if verify_token() is None:
+    if verify_token(request) is None:
         return jsonify({"message": "Unathorized"}), 401    
     
     session = Session()
@@ -37,18 +39,21 @@ def handle_reviews():
     
     reviews = session.query(Review).all()
     print(reviews)
-    session.close()
     
-    return jsonify(
-        [
+    reviews_data = [
             {
                 "id": review.id,
                 "positive": review.positive,
                 "negative": review.negative,
                 "adresed_id": review.adresed_id,
+                "adresed_name": review.adresed.name,
                 "author_id": review.author_id,
+                "author_name": review.author.name, 
                 "created_at": review.created_at,
             }
             for review in reviews
         ]
-    ), 200
+    
+    session.close()
+    
+    return jsonify(reviews_data), 200

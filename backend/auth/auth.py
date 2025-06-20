@@ -29,6 +29,7 @@ def register():
     # Create a new user instance
     new_user = User()
     new_user.email = data["email"]
+    new_user.name = data["name"]
     new_user.set_password(data["password"])
     new_user.role = data.get("role", "colleague")
 

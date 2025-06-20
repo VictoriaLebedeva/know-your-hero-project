@@ -13,11 +13,32 @@ import {
 } from "@/components/ui/table";
 
 const Reviews: FC = () => {
+
+    type Review = {
+        id: number;
+        positive: string;
+        negative?: string;
+        adresed_id: number;
+        adresed_name: string;
+        author_id: number;
+        author_name: string;
+        created_at: string;
+    };
+
+    const [reviews, setReviews] = useState<Review[]>([]);
     const [userName, setUserName] = useState<string>("");
+
 
     useEffect(() => {
         const stored = localStorage.getItem("user");
         if (stored) setUserName(JSON.parse(stored).name);
+
+        fetch("/api/reviews", { credentials: "include" })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setReviews(data);
+            });
+
     }, []);
 
     return (
@@ -41,11 +62,13 @@ const Reviews: FC = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow>
-                            <TableCell className="font-medium">Emma Johnson</TableCell>
-                            <TableCell>Always supportive!</TableCell>
-                            <TableCell>Could improve response time.</TableCell>
-                        </TableRow>
+                        {reviews.map((review) => (
+                            <TableRow key={review.id}>
+                                <TableCell className="font-medium">{review.adresed_name}</TableCell>
+                                <TableCell>{review.positive}</TableCell>
+                                <TableCell>{review.negative || "—"}</TableCell>
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </main>
