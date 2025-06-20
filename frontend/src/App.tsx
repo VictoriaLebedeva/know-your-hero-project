@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Reviews from "./pages/Reviews";
+import AddReview from "./pages/AddReview";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reviews" element={<Reviews />} />
+        <Route path="/reviews/new" element={<AddReview />} />
       </Routes>
     </Router>
   );

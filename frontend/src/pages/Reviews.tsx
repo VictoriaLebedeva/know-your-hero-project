@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -52,7 +53,9 @@ const Reviews: FC = () => {
                 </div>
             </div>
             <main className="flex-grow flex flex-col items-start mt-8 space-y-[25px]">
-                <Button>+ Add Review</Button>
+                <Link to="/reviews/new">
+                    <Button>+ Add Review</Button>
+                </Link>
                 <Table className="w-full text-left">
                     <TableHeader>
                         <TableRow>
@@ -66,7 +69,7 @@ const Reviews: FC = () => {
                             <TableRow key={review.id}>
                                 <TableCell className="font-medium">{review.adresed_name}</TableCell>
                                 <TableCell>{review.positive}</TableCell>
-                                <TableCell>{review.negative || "—"}</TableCell>
+                                <TableCell>{review.negative || ""}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
