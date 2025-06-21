@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -13,88 +13,111 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
+
+type Colleague = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+};
+
+type CurrentUser = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+};
+
+type FormData = {
+    positive: string;
+    negative: string;
+    adresed_id: number | null;
+    author_id: number | null;
+};
+
 const AddReview: FC = () => {
 
-    type Collegue = {
-        id: number;
-        name: string;
-        email: string;
-        role: string;
-        created_at: string;
-    };
-
-    type CurrentUser = {
-        id: number;
-        name: string;
-        email: string;
-        role: string;
-        created_at: string;
-    };
-
-    type FormData = {
-        positive: string;
-        negative: string;
-        adresed_id: number | null;
-        author_id: number | null;
-    };
-
     const [user, setUser] = useState<CurrentUser | null>(null);
-    const [collegues, setCollegues] = useState<Collegue[]>([]);
-
-    useEffect(() => {
-        const stored = localStorage.getItem("user");
-        if (stored) {
-            const parsedUser = JSON.parse(stored);
-            setUser(parsedUser);
-        }
-
-        fetch("/api/users", { credentials: "include" })
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setCollegues(data);
-            });
-    }, []);
-
-    const userName = user?.name ?? "John Doe";
-
-    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setFormData((prevData) => ({
-            ...prevData,
-            [e.target.id]: e.target.value,
-        }));
-    };
-
+    const [colleagues, setColleagues] = useState<Colleague[]>([]);
     const [formData, setFormData] = useState<FormData>({
         positive: "",
         negative: "",
         adresed_id: null,
-        author_id: user?.id ?? null,
+        author_id: null,
     });
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // Load user from localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            setUser(parsed);
+        }
+    }, []);
+
+    // Load colleagues when component mounts
+    useEffect(() => {
+        const cached = localStorage.getItem("colleagues");
+        if (cached) {
+            setColleagues(JSON.parse(cached));
+            return;
+        }
+        fetch("/api/users", { credentials: "include" })
+            .then((res) => res.json())
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    setColleagues(data);
+                    localStorage.setItem("colleagues", JSON.stringify(data));
+                }
+            });
+    }, []);
+
+
+    // When user loads, set author_id
+    useEffect(() => {
+        setFormData((prev) => ({
+            ...prev,
+            author_id: user?.id ?? null,
+        }));
+    }, [user]);
+
+    const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [id]: value,
+        }));
+    };
+
+    const handleColleagueChange = (value: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            adresed_id: Number(value),
+        }));
+    };
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        const dataToSubmit = {
-            ...formData,
-            author_id: user?.id 
-        };
-
+        // Update author_id in case user just loaded
+        const dataToSubmit = { ...formData, author_id: user?.id ?? null };
         try {
             const response = await fetch("/api/reviews", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dataToSubmit),
             });
-
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            alert("Review Succesfully created!");
+            alert("Review successfully created!");
+            // Optionally reset form here
         } catch (error) {
             alert(`Creation failed: ${(error as Error).message}`);
         }
     };
+
+    const userName = user?.name ?? "John Doe";
 
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
@@ -112,22 +135,15 @@ const AddReview: FC = () => {
                         <div className="w-lg">
                             <p className="text-xl font-semibold">Step 1</p>
                             <p className="text-xl">Choose colleague</p>
-                            <Select
-                                onValueChange={(value) =>
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        adresed_id: Number(value),
-                                    }))
-                                }
-                            >
+                            <Select onValueChange={handleColleagueChange}>
                                 <SelectTrigger className="w-full mt-8">
                                     <SelectValue placeholder="Select an option" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        {collegues.map((collegue) => (
-                                            <SelectItem key={collegue.id} value={collegue.id.toString()}>
-                                                {collegue.name}
+                                        {colleagues.map((colleague) => (
+                                            <SelectItem key={colleague.id} value={colleague.id.toString()}>
+                                                {colleague.name}
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>
