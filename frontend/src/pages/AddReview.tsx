@@ -37,16 +37,18 @@ type FormData = {
     author_id: number | null;
 };
 
+const initialFormData = {
+  positive: "",
+  negative: "",
+  adresed_id: null,
+  author_id: null,
+};
+
 const AddReview: FC = () => {
 
     const [user, setUser] = useState<CurrentUser | null>(null);
     const [colleagues, setColleagues] = useState<Colleague[]>([]);
-    const [formData, setFormData] = useState<FormData>({
-        positive: "",
-        negative: "",
-        adresed_id: null,
-        author_id: null,
-    });
+    const [formData, setFormData] = useState<FormData>(initialFormData)
 
     // Load user from localStorage
     useEffect(() => {
@@ -111,7 +113,12 @@ const AddReview: FC = () => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
             alert("Review successfully created!");
-            // Optionally reset form here
+            
+            setFormData({
+                ...initialFormData,
+                author_id: user?.id ?? null,
+            });
+
         } catch (error) {
             alert(`Creation failed: ${(error as Error).message}`);
         }

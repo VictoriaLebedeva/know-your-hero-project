@@ -13,26 +13,26 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+type Review = {
+    id: number;
+    positive: string;
+    negative?: string;
+    adresed_id: number;
+    adresed_name: string;
+    author_id: number;
+    author_name: string;
+    created_at: string;
+};
+
+type CurrentUser = {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+}
+
 const Reviews: FC = () => {
-
-    type Review = {
-        id: number;
-        positive: string;
-        negative?: string;
-        adresed_id: number;
-        adresed_name: string;
-        author_id: number;
-        author_name: string;
-        created_at: string;
-    };
-
-    type CurrentUser = {
-        id: number;
-        name: string;
-        email: string;
-        role: string;
-        created_at: string;
-    }
 
     const [reviews, setReviews] = useState<Review[]>([]);
     const [user, setUser] = useState<CurrentUser | null>(null);
