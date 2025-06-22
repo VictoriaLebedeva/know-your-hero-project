@@ -1,8 +1,13 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button";
-
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type CurrentUser = {
     id: number;
@@ -15,6 +20,7 @@ type CurrentUser = {
 const Header: FC = () => {
     const [user, setUser] = useState<CurrentUser | null>(null);
     const location = useLocation();
+    const navigate = useNavigate()
 
     useEffect(() => {
         const stored = localStorage.getItem("user");
@@ -25,6 +31,23 @@ const Header: FC = () => {
     }, []);
 
     const userName = user?.name ?? "Stranger";
+
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("/api/auth/logout", {
+                method: "POST",
+                credentials: 'include'
+            });
+            const data = await response.json()
+            if (!response.ok) throw new Error(data.message);
+            alert("Logout successful!");
+            localStorage.clear()
+            navigate("/");
+        } catch (error) {
+            alert(`Logout failed: ${(error as Error).message}`);
+        }
+    };
+
 
     return (
         <div className="flex justify-between items-center w-full">
@@ -39,13 +62,19 @@ const Header: FC = () => {
                 {"Know\nYour\nHero"}
             </h1>
             <div className="relative text-right">
-                <p className="text-right font-semibold">
-                    How are you, <span className="underline">{userName}</span>?
-                </p>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <p className="text-right font-semibold">
+                            How are you, <span className="underline">{userName}</span>?
+                        </p>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuRadioItem value="logout" onClick={handleLogout}>Log Out</DropdownMenuRadioItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );
 }
-
 
 export default Header;

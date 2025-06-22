@@ -66,7 +66,7 @@ def login():
         )
         response.set_cookie(
             "access_token",
-            token,
+            value=token,
             httponly=True,
             secure=False,
             samesite="Lax"
@@ -84,9 +84,7 @@ def get_users():
             {
                 "id": user.id,
                 "name": user.name,
-                "email": user.email,
-                "role": user.role,
-                "created_at": user.created_at.isoformat(),
+                "email": user.email
             }
             for user in users
         ]
@@ -118,3 +116,22 @@ def get_user():
         "role": user.role,
         "created_at": user.created_at.isoformat(),
     })
+
+@auth_bp.route("/api/auth/logout", methods=["POST"])
+def logout():
+    token_payload = verify_token(request)
+    
+    if token_payload is None:
+        return jsonify({"message": "Unathorized"}), 401   
+    
+    response = make_response(jsonify({"message": "Log Out successful!"}))
+    response.set_cookie(
+            "access_token",
+            value="",
+            max_age=0,
+            httponly=True,
+            secure=False,
+            samesite="Lax"
+        )
+    
+    return response       
