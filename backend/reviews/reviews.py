@@ -13,8 +13,6 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 @reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():
-    
-    print(request.cookies)
 
     if verify_token(request) is None:
         return jsonify({"message": "Unathorized"}), 401    
@@ -38,7 +36,6 @@ def handle_reviews():
 
     
     reviews = session.query(Review).all()
-    print(reviews)
     
     reviews_data = [
             {
