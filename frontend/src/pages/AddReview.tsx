@@ -125,25 +125,16 @@ const AddReview: FC = () => {
         }
     };
 
-    const userName = user?.name ?? "John Doe";
-
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
-            <div className="flex justify-between items-center w-full">
-                <Header />
-                <div className="relative text-right">
-                    <p className="text-right font-semibold">
-                        How are you, <span className="underline">{userName}</span>?
-                    </p>
-                </div>
-            </div>
+            <Header />
             <main className="flex-grow flex flex-col items-center mt-12">
                 <form onSubmit={(e) => handleSubmit(e)} className="form-container">
                     <div className="flex flex-row gap-[70px]">
                         <div className="w-lg">
                             <p className="text-xl font-semibold">Step 1</p>
                             <p className="text-xl">Choose colleague</p>
-                            <Select onValueChange={handleColleagueChange}>
+                            <Select value={formData.adresed_id?.toString() ?? ""} onValueChange={handleColleagueChange}>
                                 <SelectTrigger className="w-full mt-8">
                                     <SelectValue placeholder="Select an option" />
                                 </SelectTrigger>
