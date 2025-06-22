@@ -1,5 +1,6 @@
 import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -38,10 +39,10 @@ type FormData = {
 };
 
 const initialFormData = {
-  positive: "",
-  negative: "",
-  adresed_id: null,
-  author_id: null,
+    positive: "",
+    negative: "",
+    adresed_id: null,
+    author_id: null,
 };
 
 const AddReview: FC = () => {
@@ -113,7 +114,7 @@ const AddReview: FC = () => {
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
             alert("Review successfully created!");
-            
+
             setFormData({
                 ...initialFormData,
                 author_id: user?.id ?? null,
@@ -175,7 +176,9 @@ const AddReview: FC = () => {
                         </div>
                     </div>
                     <div className="flex flex-row justify-end gap-[10px] mt-10">
-                        <Button type="button" variant="outline">Cancel</Button>
+                        <Link to="/reviews">
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </Link>
                         <Button type="submit">Submit</Button>
                     </div>
                 </form>
