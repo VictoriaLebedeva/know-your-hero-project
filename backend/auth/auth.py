@@ -14,40 +14,62 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 @auth_bp.route("/api/auth/register", methods=["POST"])
 def register():
-    """Handles user registration."""
+    """Handles user registration by creating a new user if the email is not already registered. Returns a success message or an error if the email exists."""
 
     data = request.get_json()
+    if not data or not isinstance(data, dict):
+        return jsonify({"message": "Invalid input. JSON body required."}), 400
+    required_fields = ["email", "name", "password"]
+    for field in required_fields:
+        if field not in data or not data[field]:
+            return jsonify({"message": f"Missing or empty field: {field}"}), 400
 
-    # Create a new database session
-    session = Session()
+    try:
+        session = Session()
+        # Check if a user with the given email already exists
+        if session.query(User).filter_by(email=data["email"]).first():
+            session.close()
+            return jsonify({"message": "Email already registered"}), 400
 
-    # Check if a user with the given email already exists
-    if session.query(User).filter_by(email=data["email"]).first():
+        # Create a new user instance
+        new_user = User()
+        new_user.email = data["email"]
+        new_user.name = data["name"]
+        new_user.set_password(data["password"])
+        new_user.role = data.get("role", "colleague")
+
+        session.add(new_user)
+        session.commit()
         session.close()
-        return jsonify({"message": "Email already registered"}), 400
-
-    # Create a new user instance
-    new_user = User()
-    new_user.email = data["email"]
-    new_user.name = data["name"]
-    new_user.set_password(data["password"])
-    new_user.role = data.get("role", "colleague")
-
-    session.add(new_user)
-    session.commit()
-    session.close()
+    except Exception as e:
+        if 'session' in locals():
+            session.rollback()
+            session.close()
+        return jsonify({"message": f"Database error: {str(e)}"}), 500
 
     return jsonify({"message": "User created successfully"}), 201
 
 
 @auth_bp.route("/api/auth/login", methods=["POST"])
 def login():
+    """Authenticates a user by verifying email and password, then issues a JWT token as an HTTP-only cookie if successful."""
+
     data = request.get_json()
-    if not data or "email" not in data or "password" not in data:
-        return jsonify({"message": "Email and password are required"}), 400
-    session = Session()
-    user = session.query(User).filter_by(email=data["email"]).first()
-    session.close()
+    if not data or not isinstance(data, dict):
+        return jsonify({"message": "Invalid input. JSON body required."}), 400
+    if "email" not in data or not data["email"]:
+        return jsonify({"message": "Email is required"}), 400
+    if "password" not in data or not data["password"]:
+        return jsonify({"message": "Password is required"}), 400
+    try:
+        session = Session()
+        user = session.query(User).filter_by(email=data["email"]).first()
+        session.close()
+    except Exception as e:
+        if 'session' in locals():
+            session.rollback()
+            session.close()
+        return jsonify({"message": f"Database error: {str(e)}"}), 500
 
     if not user:
         return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
@@ -76,6 +98,13 @@ def login():
 
 @auth_bp.route("/api/users", methods=["GET"])
 def get_users():
+    """Retrieves a list of all users with their id, name, and email."""
+
+    token_payload = verify_token(request)
+    
+    if token_payload is None:
+        return jsonify({"message": "Unathorized"}), 401    
+    
     session = Session()
     users = session.query(User).all()
     
@@ -92,7 +121,7 @@ def get_users():
     
 @auth_bp.route("/api/me", methods=["GET"])
 def get_user():
-    """Fetch a specific user's information about authorized user."""
+    """Fetches information about the currently authorized user based on the JWT token in the request."""
     
     user_id = None
     token_payload = verify_token(request)
@@ -119,6 +148,8 @@ def get_user():
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
+    """Logs out the current user by clearing the authentication cookie."""
+    
     token_payload = verify_token(request)
     
     if token_payload is None:
@@ -134,4 +165,4 @@ def logout():
             samesite="Lax"
         )
     
-    return response       
+    return response
