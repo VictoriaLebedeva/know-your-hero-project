@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 import {
     Select,
     SelectContent,
@@ -113,7 +114,7 @@ const AddReview: FC = () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message);
-            alert("Review successfully created!");
+            toast("Review successfully created!");
 
             setFormData({
                 ...initialFormData,
@@ -121,7 +122,7 @@ const AddReview: FC = () => {
             });
 
         } catch (error) {
-            alert(`Creation failed: ${(error as Error).message}`);
+            toast(`Creation failed: ${(error as Error).message}`);
         }
     };
 

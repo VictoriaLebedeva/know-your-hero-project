@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,11 +41,11 @@ const Header: FC = () => {
             });
             const data = await response.json()
             if (!response.ok) throw new Error(data.message);
-            alert("Logout successful!");
+            toast("Logout successful!");
             localStorage.clear()
             navigate("/");
         } catch (error) {
-            alert(`Logout failed: ${(error as Error).message}`);
+            toast(`Logout failed: ${(error as Error).message}`);
         }
     };
 

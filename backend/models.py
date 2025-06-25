@@ -49,7 +49,7 @@ class Review(Base):
     
     id = Column(Integer, primary_key=True)
     positive = Column(String(1000), nullable=False)
-    negative = Column(String(1000), nullable=False)
+    negative = Column(String(1000))
     adresed_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # User being reviewed
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)   # User who wrote the review
     created_at = Column(DateTime, default=datetime.now(timezone.utc))   

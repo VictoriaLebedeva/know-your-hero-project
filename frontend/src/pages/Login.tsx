@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import type { FC } from "react";
@@ -48,10 +49,10 @@ const Login: FC = () => {
             // save user data into the local storage
             localStorage.setItem("user", JSON.stringify(userData));
 
-            alert("Login successful!");
+            toast("Login successful!");
             navigate("/reviews");
         } catch (error) {
-            alert(`Login failed: ${(error as Error).message}`);
+            toast(`Login failed: ${(error as Error).message}`);
         }
     };
 

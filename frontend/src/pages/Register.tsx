@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner"
 import type { FC } from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -28,7 +29,7 @@ const Register: FC = () => {
     e.preventDefault();
 
     if (formData.password !== formData.repeatPassword) {
-      alert("Passwords do not match!");
+      toast("Passwords do not match!");
       return;
     }
 
@@ -47,9 +48,9 @@ const Register: FC = () => {
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
-      alert("Registration successful!");
+      toast("Registration successful!");
     } catch (error) {
-      alert(`Registration failed: ${(error as Error).message}`);
+      toast(`Registration failed: ${(error as Error).message}`);
     }
   };
 
