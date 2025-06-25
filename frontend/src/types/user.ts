@@ -1,5 +1,5 @@
 export type CurrentUserType = { 
-    id: BigInteger,
+    id: number,
     email: string, 
     name: string,
     role: string

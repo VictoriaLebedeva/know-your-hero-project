@@ -1,4 +1,3 @@
-// hooks/useUser.ts
 import { useQuery } from '@tanstack/react-query';
 import { fetchUser } from '../api';
 import { useUserStore } from '../../stores/userStore';

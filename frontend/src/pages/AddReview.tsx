@@ -1,5 +1,7 @@
 import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
+import { useUser } from '../lib/queries/useUser';
+import { useUserStore } from '../stores/userStore';
 import { Link } from "react-router-dom"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -24,14 +26,6 @@ type Colleague = {
     created_at: string;
 };
 
-type CurrentUser = {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    created_at: string;
-};
-
 type FormData = {
     positive: string;
     negative: string;
@@ -48,18 +42,11 @@ const initialFormData = {
 
 const AddReview: FC = () => {
 
-    const [user, setUser] = useState<CurrentUser | null>(null);
+    useUser();
+    const user = useUserStore((s) => s.user);
+
     const [colleagues, setColleagues] = useState<Colleague[]>([]);
     const [formData, setFormData] = useState<FormData>(initialFormData)
-
-    // Load user from localStorage
-    useEffect(() => {
-        const stored = localStorage.getItem("user");
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            setUser(parsed);
-        }
-    }, []);
 
     // Load colleagues when component mounts
     useEffect(() => {
