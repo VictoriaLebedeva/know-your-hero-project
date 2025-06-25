@@ -2,6 +2,9 @@ import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useUser } from '../lib/queries/useUser';
 import { useUserStore } from '../stores/userStore';
+import { useColleagues } from '../lib/queries/useColleagues';
+import { useColleagueStore } from '../stores/colleagueStore';
+
 import { Link } from "react-router-dom"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,15 +19,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-
-
-type Colleague = {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    created_at: string;
-};
 
 type FormData = {
     positive: string;
@@ -42,29 +36,12 @@ const initialFormData = {
 
 const AddReview: FC = () => {
 
-    useUser();
+    useColleagues();
+    const colleagues = useColleagueStore((s) => s.colleagues);
+
     const user = useUserStore((s) => s.user);
 
-    const [colleagues, setColleagues] = useState<Colleague[]>([]);
     const [formData, setFormData] = useState<FormData>(initialFormData)
-
-    // Load colleagues when component mounts
-    useEffect(() => {
-        const cached = localStorage.getItem("colleagues");
-        if (cached) {
-            setColleagues(JSON.parse(cached));
-            return;
-        }
-        fetch("/api/users", { credentials: "include" })
-            .then((res) => res.json())
-            .then((data) => {
-                if (Array.isArray(data)) {
-                    setColleagues(data);
-                    localStorage.setItem("colleagues", JSON.stringify(data));
-                }
-            });
-    }, []);
-
 
     // When user loads, set author_id
     useEffect(() => {
