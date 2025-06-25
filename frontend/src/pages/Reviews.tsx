@@ -48,6 +48,7 @@ const Reviews: FC = () => {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Hero</TableHead>
+                            <TableHead>Author</TableHead>
                             <TableHead>Positive</TableHead>
                             <TableHead>Negative</TableHead>
                         </TableRow>
@@ -56,8 +57,9 @@ const Reviews: FC = () => {
                         {reviews.map((review) => (
                             <TableRow key={review.id}>
                                 <TableCell className="font-medium">{review.adresed_name}</TableCell>
+                                <TableCell className="font-medium">{review.author_name}</TableCell>
                                 <TableCell>{review.positive}</TableCell>
-                                <TableCell>{review.negative || ""}</TableCell>
+                                <TableCell>{review.negative}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
