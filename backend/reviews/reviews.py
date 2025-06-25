@@ -22,7 +22,7 @@ def handle_reviews():
         session = Session()
         if request.method == "POST":
             data = request.get_json()
-            required_fields = ["positive", "adresed_id", "author_id"]
+            required_fields = ["adresed_id", "author_id"]
             for field in required_fields:
                 if field not in data or not data[field]:
                     session.close()

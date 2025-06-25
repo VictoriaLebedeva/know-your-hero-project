@@ -104,7 +104,13 @@ const AddReview: FC = () => {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // Update author_id in case user just loaded
+
+        // check if any of positive or negative reviews are filled
+        if (!formData.positive?.trim() && !formData.negative?.trim()) {
+            toast.error("Please fill in at least one of 'positive' or 'negative' fields.")
+            return
+        }
+
         const dataToSubmit = { ...formData, author_id: user?.id ?? null };
         try {
             const response = await fetch("/api/reviews", {
