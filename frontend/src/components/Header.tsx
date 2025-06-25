@@ -45,7 +45,7 @@ const Header: FC = () => {
             localStorage.clear()
             navigate("/");
         } catch (error) {
-            toast(`Logout failed: ${(error as Error).message}`);
+            toast.error(`Logout failed: ${(error as Error).message}`);
         }
     };
 

@@ -29,7 +29,7 @@ const Register: FC = () => {
     e.preventDefault();
 
     if (formData.password !== formData.repeatPassword) {
-      toast("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
@@ -50,7 +50,7 @@ const Register: FC = () => {
       if (!response.ok) throw new Error(data.message);
       toast("Registration successful!");
     } catch (error) {
-      toast(`Registration failed: ${(error as Error).message}`);
+      toast.error(`Registration failed: ${(error as Error).message}`);
     }
   };
 

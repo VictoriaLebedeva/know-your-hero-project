@@ -122,7 +122,7 @@ const AddReview: FC = () => {
             });
 
         } catch (error) {
-            toast(`Creation failed: ${(error as Error).message}`);
+            toast.error(`Creation failed: ${(error as Error).message}`);
         }
     };
 
