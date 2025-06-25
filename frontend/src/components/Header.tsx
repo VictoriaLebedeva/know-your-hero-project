@@ -12,10 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 const Header: FC = () => {
-    console.log("Header mounted");
-    const { data, error, isLoading } = useUser();
-    console.log({ data, error, isLoading });
-
 
     useUser();
     const user = useUserStore((s) => s.user);
@@ -23,7 +19,6 @@ const Header: FC = () => {
 
     const location = useLocation();
     const navigate = useNavigate()
-
 
     const handleLogout = async () => {
         try {
@@ -39,7 +34,6 @@ const Header: FC = () => {
             toast.error(`Logout failed: ${(error as Error).message}`);
         }
     };
-
 
     return (
         <div className="flex justify-between items-center w-full">

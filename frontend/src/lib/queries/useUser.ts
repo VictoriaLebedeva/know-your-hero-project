@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchUser } from '../api';
+import { fetchUser } from '../api/auth';
 import { useUserStore } from '../../stores/userStore';
 import { useEffect } from 'react';
 import type { CurrentUserType } from '../../types/user';

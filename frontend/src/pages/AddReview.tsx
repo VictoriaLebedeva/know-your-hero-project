@@ -1,9 +1,8 @@
 import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { useUser } from '../lib/queries/useUser';
-import { useUserStore } from '../stores/userStore';
-import { useColleagues } from '../lib/queries/useColleagues';
-import { useColleagueStore } from '../stores/colleagueStore';
+import { useUserStore } from "../stores/userStore";
+import { useColleagues } from "../lib/queries/useColleagues";
+import { useColleagueStore } from "../stores/colleagueStore";
 
 import { Link } from "react-router-dom"
 import Header from "@/components/Header";

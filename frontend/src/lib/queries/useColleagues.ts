@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchAllColleagues } from '../api';
+import { fetchAllColleagues } from '../api/auth';
 import { useColleagueStore } from '../../stores/colleagueStore';
 import { useEffect } from 'react';
-import type { ColleagueType } from '../../types/colleagues';
+import type { ColleagueType } from '../../types/colleague';
 
 export const useColleagues = () => {
   const setColleagues = useColleagueStore((s) => s.setColleagues);

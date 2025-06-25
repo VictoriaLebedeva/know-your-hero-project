@@ -1,5 +1,8 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
+import type { ReviewType } from "../types/review"
+import { fetchAllReviews } from "@/lib/api/reviews";
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -13,28 +16,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
-type Review = {
-    id: number;
-    positive: string;
-    negative?: string;
-    adresed_id: number;
-    adresed_name: string;
-    author_id: number;
-    author_name: string;
-    created_at: string;
-};
 
 const Reviews: FC = () => {
 
-    const [reviews, setReviews] = useState<Review[]>([]);
+    const [reviews, setReviews] = useState<ReviewType[]>([]);
 
     useEffect(() => {
-        fetch("/api/reviews", { credentials: "include" })
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setReviews(data);
-            });
-
+        fetchAllReviews().then(setReviews).catch(console.error);
     }, []);
 
     return (
