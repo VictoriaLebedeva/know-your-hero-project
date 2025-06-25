@@ -1,5 +1,6 @@
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useUser } from '../lib/queries/useUser';
+import { useUserStore } from '../stores/userStore';
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -10,28 +11,19 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-type CurrentUser = {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    created_at: string;
-}
-
 const Header: FC = () => {
-    const [user, setUser] = useState<CurrentUser | null>(null);
+    console.log("Header mounted");
+    const { data, error, isLoading } = useUser();
+    console.log({ data, error, isLoading });
+
+
+    useUser();
+    const user = useUserStore((s) => s.user);
+    const userName = user?.name ?? "Stranger";
+
     const location = useLocation();
     const navigate = useNavigate()
 
-    useEffect(() => {
-        const stored = localStorage.getItem("user");
-        if (stored) {
-            const parsedUser = JSON.parse(stored);
-            setUser(parsedUser);
-        }
-    }, []);
-
-    const userName = user?.name ?? "Stranger";
 
     const handleLogout = async () => {
         try {
