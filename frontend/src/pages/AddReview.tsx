@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "../stores/userStore";
 import { useColleagues } from "../lib/queries/useColleagues";
 import { useColleagueStore } from "../stores/colleagueStore";
-
 import { Link } from "react-router-dom"
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";

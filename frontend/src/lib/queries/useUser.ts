@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchUser } from '../api/auth';
-import { useUserStore } from '../../stores/userStore';
-import { useEffect } from 'react';
-import type { CurrentUserType } from '../../types/user';
+import { useQuery } from "@tanstack/react-query";
+import { fetchUser } from "@/lib/api/auth";
+import { useUserStore } from "../../stores/userStore";
+import { useEffect } from "react";
+import type { CurrentUserType } from "../../types/user";
 
 export const useUser = () => {
   const setUser = useUserStore((s) => s.setUser);

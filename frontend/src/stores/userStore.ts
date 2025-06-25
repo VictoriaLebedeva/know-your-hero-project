@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import type { CurrentUserType } from '../types/user';
+import { create } from "zustand";
+import type { CurrentUserType } from "../types/user";
 
 type State = {
   user: CurrentUserType | null;

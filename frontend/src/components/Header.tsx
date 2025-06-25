@@ -1,7 +1,8 @@
 import type { FC } from "react";
-import { useUser } from '../lib/queries/useUser';
-import { useUserStore } from '../stores/userStore';
+import { useUser } from "../lib/queries/useUser";
+import { useUserStore } from "../stores/userStore";
 import { Link, useLocation, useNavigate } from "react-router-dom"
+
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import {
@@ -24,7 +25,7 @@ const Header: FC = () => {
         try {
             const response = await fetch("/api/auth/logout", {
                 method: "POST",
-                credentials: 'include'
+                credentials: "include"
             });
             const data = await response.json()
             if (!response.ok) throw new Error(data.message);

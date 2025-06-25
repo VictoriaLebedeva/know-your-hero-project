@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import type { ColleagueType } from '../types/colleague';
+import { create } from "zustand";
+import type { ColleagueType } from "../types/colleague";
 
 type State = {
     colleagues: ColleagueType[];
