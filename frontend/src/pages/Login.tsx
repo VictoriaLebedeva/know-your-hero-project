@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import type { FC } from "react";
 import { useState } from "react";
+import { login } from "@/lib/api/auth";
 import Footer from "@/components/Footer";
 const Login: FC = () => {
 
@@ -25,22 +26,8 @@ const Login: FC = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         try {
-            const response = await fetch("/api/auth/login", {
-                method: "POST",
-                credentials: 'include',
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: formData.email,
-                    password: formData.password,
-                }),
-            });
-            const data = await response.json()
-            if (!response.ok) throw new Error(data.message);
-
+            await login(formData.email, formData.password);
             toast("Login successful!");
             navigate("/reviews");
         } catch (error) {

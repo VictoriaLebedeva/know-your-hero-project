@@ -42,7 +42,6 @@ const AddReview: FC = () => {
 
     const [formData, setFormData] = useState<FormData>(initialFormData)
 
-    // When user loads, set author_id
     useEffect(() => {
         setFormData((prev) => ({
             ...prev,

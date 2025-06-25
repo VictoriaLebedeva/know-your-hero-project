@@ -11,3 +11,17 @@ export const fetchAllColleagues = async () => {
     if (!res.ok) throw new Error('Failed to fetch colleagues');
     return res.json();
 }
+
+export const login = async (email: string, password: string) => {
+    const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+};
