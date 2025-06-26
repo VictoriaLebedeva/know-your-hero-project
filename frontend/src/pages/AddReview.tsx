@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "../stores/userStore";
 import { useColleagues } from "../lib/queries/useColleagues";
 import { useColleagueStore } from "../stores/colleagueStore";
+import { createReview } from "@/lib/api/reviews";
+
 import { Link } from "react-router-dom"
 
 import Header from "@/components/Header";
@@ -37,7 +39,6 @@ const AddReview: FC = () => {
 
     useColleagues();
     const colleagues = useColleagueStore((s) => s.colleagues);
-
     const user = useUserStore((s) => s.user);
 
     const [formData, setFormData] = useState<FormData>(initialFormData)
@@ -66,29 +67,18 @@ const AddReview: FC = () => {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        // check if any of positive or negative reviews are filled
         if (!formData.positive?.trim() && !formData.negative?.trim()) {
-            toast.error("Please fill in at least one of 'positive' or 'negative' fields.")
-            return
+            toast.error("Please fill in at least one of 'positive' or 'negative' fields.");
+            return;
         }
-
         const dataToSubmit = { ...formData, author_id: user?.id ?? null };
         try {
-            const response = await fetch("/api/reviews", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dataToSubmit),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
+            await createReview(dataToSubmit);
             toast("Review successfully created!");
-
             setFormData({
                 ...initialFormData,
                 author_id: user?.id ?? null,
             });
-
         } catch (error) {
             toast.error(`Creation failed: ${(error as Error).message}`);
         }
