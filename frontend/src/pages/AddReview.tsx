@@ -4,6 +4,7 @@ import { useUserStore } from "../stores/userStore";
 import { useColleagues } from "../lib/queries/useColleagues";
 import { useColleagueStore } from "../stores/colleagueStore";
 import { createReview } from "@/lib/api/reviews";
+import { refreshToken } from "@/lib/api/auth";
 
 import { Link } from "react-router-dom"
 
@@ -67,11 +68,14 @@ const AddReview: FC = () => {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
         if (!formData.positive?.trim() && !formData.negative?.trim()) {
             toast.error("Please fill in at least one of 'positive' or 'negative' fields.");
             return;
         }
+
         const dataToSubmit = { ...formData, author_id: user?.id ?? null };
+
         try {
             await createReview(dataToSubmit);
             toast("Review successfully created!");
@@ -79,8 +83,23 @@ const AddReview: FC = () => {
                 ...initialFormData,
                 author_id: user?.id ?? null,
             });
-        } catch (error) {
-            toast.error(`Creation failed: ${(error as Error).message}`);
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                try {
+                    await refreshToken();
+
+                    await createReview(dataToSubmit);
+                    toast("Review successfully created!");
+                    setFormData({
+                        ...initialFormData,
+                        author_id: user?.id ?? null,
+                    });
+                } catch (refreshError) {
+                    toast.error("Session expired, please log in again.");
+                }
+            } else {
+                toast.error(`Creation failed: ${error.message}`);
+            }
         }
     };
 

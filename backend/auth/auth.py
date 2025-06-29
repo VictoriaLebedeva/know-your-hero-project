@@ -73,7 +73,7 @@ def login():
             return jsonify({"message": f"Incorrect password"}), 401
         else:
             response = make_response(jsonify({"message": "Login successful"}))
-            access_token, _, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
+            access_token, _, _ = generate_jwt(user.id, user.role, timedelta(minutes=1))
             refresh_token, jti, expiration_date = generate_jwt(
                 user.id, user.role, timedelta(days=30)
             )
@@ -187,55 +187,63 @@ def logout():
     return response
 
 
-# @auth_bp.route("/api/auth/refresh", methods=["POST"])
-# def refresh():
+@auth_bp.route("/api/auth/refresh", methods=["POST"])
+def refresh():
 
-#     refresh_token = request.cookies.get("refresh_token")
+    refresh_token = request.cookies.get("refresh_token")
+    decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=["HS256"])
+    
+    jti = decoded.get("jti")
+    user_id = decoded.get("user_id")
 
-#     try:
-#         session = Session()
-#         user = session.query(User).filter_by(email=data["email"]).first()
+    try:
+        session = Session()
+        refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
+        user = session.query(User).filter_by(id=user_id).first()
 
-#         if not user:
-#             return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
-#         elif not user.check_password(data["password"]):
-#             return jsonify({"message": f"Incorrect password"}), 401
-#         else:
-#             response = make_response(jsonify({"message": "Login successful"}))
-#             access_token, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
-#             refresh_token, expiration_date = generate_jwt(
-#                 user.id, user.role, timedelta(days=30)
-#             )
-#             print("Refresh:", refresh_token)
-#             print("Expiraion:", expiration_date)
+        if not refresh_token_db:
+            return jsonify({"message": f"No such token in a database"}), 401
+        elif not user: 
+            return jsonify({"message": f"No such user in a database"}), 401
+        else:
+            response = make_response(jsonify({"message": "Login successful"}))
+            access_token, _, _ = generate_jwt(user.id, user.role, timedelta(minutes=1))
+            refresh_token, jti , expiration_date = generate_jwt(
+                user.id, user.role, timedelta(days=30)
+            )
 
-#             response.set_cookie(
-#                 "access_token",
-#                 value=access_token,
-#                 httponly=True,
-#                 secure=False,
-#                 samesite="Lax",
-#             )
+            response.set_cookie(
+                "access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+            )
 
-#             response.set_cookie(
-#                 "refresh_token",
-#                 value=refresh_token,
-#                 httponly=True,
-#                 secure=False,
-#                 samesite="Lax",
-#             )
+            response.set_cookie(
+                "refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+            )
+            
+            refresh_token_db.is_revoked = True
+            session.add(refresh_token_db) 
 
-#             new_refresh_token = RefreshToken()
-#             new_refresh_token.set_token(refresh_token)
-#             new_refresh_token.user_id = user.id
-#             new_refresh_token.expires_at = expiration_date
-#             session.add(new_refresh_token)
-#             session.commit()
+            new_refresh_token = RefreshToken()
+            new_refresh_token.id = jti
+            new_refresh_token.set_token(refresh_token)
+            new_refresh_token.user_id = user.id
+            new_refresh_token.expires_at = expiration_date
+            session.add(new_refresh_token)
+            session.commit()
 
-#         session.close()
+        session.close()
+        return response
 
-#     except Exception as e:
-#         if "session" in locals():
-#             session.rollback()
-#             session.close()
-#         return jsonify({"message": f"Database error: {str(e)}"}), 500
+    except Exception as e:
+        if "session" in locals():
+            session.rollback()
+            session.close()
+        return jsonify({"message": f"Database error: {str(e)}"}), 500
