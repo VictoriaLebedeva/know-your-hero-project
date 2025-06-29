@@ -2,14 +2,19 @@ import type { FC } from "react";
 import { useState } from "react";
 
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
+import { register, login } from "@/lib/api/auth";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner"
 import Footer from "@/components/Footer";
+import { toast } from "sonner"
 
 const Register: FC = () => {
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -27,30 +32,23 @@ const Register: FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (formData.password !== formData.repeatPassword) {
       toast.error("Passwords do not match!");
       return;
     }
-
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-      toast("Registration successful!");
+      await register(formData.email, formData.password, formData.name);
     } catch (error) {
       toast.error(`Registration failed: ${(error as Error).message}`);
+      return;
+    }
+
+    try {
+      await login(formData.email, formData.password);
+      toast("Registration successful!");
+      navigate("/reviews");
+    } catch (error) {
+      toast.error(`Login failed: ${(error as Error).message}`);
     }
   };
 

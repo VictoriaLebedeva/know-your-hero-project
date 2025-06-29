@@ -1,4 +1,4 @@
-// fech information about all reviews in a database
+// get all reviews
 export const fetchAllReviews = async () => {
     const res = await fetch("/api/reviews", { credentials: "include" });
     if (!res.ok) throw new Error('Failed to fetch reviews');
