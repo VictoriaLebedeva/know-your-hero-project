@@ -3,9 +3,9 @@ import jwt
 import uuid
 from utils import (
     verify_token,
-    generate_jwt,
     validate_credentials,
     set_auth_cookies_and_refresh_token,
+    revoke_refresh_token_by_request,
 )
 from flask import Blueprint, request, jsonify, make_response
 from models import Session, User, RefreshToken
@@ -124,26 +124,6 @@ def get_user():
         )
 
 
-@auth_bp.route("/api/auth/logout", methods=["POST"])
-def logout():
-    """Logs out the current user by clearing the authentication cookie."""
-
-    response = make_response(jsonify({"message": "Log Out successful!"}))
-    response.set_cookie(
-        "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
-    )
-    response.set_cookie(
-        "refresh_token",
-        value="",
-        max_age=0,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-    )
-
-    return response
-
-
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
 def refresh():
     """Refreshes the authentication token using the refresh token stored in cookies.
@@ -174,3 +154,28 @@ def refresh():
 
     except Exception as e:
         return jsonify({"message": f"Database error: {str(e)}"}), 500
+
+
+
+@auth_bp.route("/api/auth/logout", methods=["POST"])
+def logout():
+    """Logs out the current user by clearing the authentication cookie and revoking the refresh token in the database."""
+    with Session() as session:
+        revoked = revoke_refresh_token_by_request(request, session)
+    if not revoked:
+        return jsonify({"message": "No valid refresh token found or already revoked"}), 401
+
+    response = make_response(jsonify({"message": "Log Out successful!"}))
+    response.set_cookie(
+        "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
+    )
+    response.set_cookie(
+        "refresh_token",
+        value="",
+        max_age=0,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+    )
+
+    return response
