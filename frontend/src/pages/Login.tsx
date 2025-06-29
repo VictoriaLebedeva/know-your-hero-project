@@ -34,7 +34,7 @@ const Login: FC = () => {
             toast("Login successful!");
             navigate("/reviews");
         } catch (error) {
-            toast.error(`Login failed: ${(error as Error).message}`);
+            toast.error("Login failed: ${(error as Error).message}");
         }
     };
 

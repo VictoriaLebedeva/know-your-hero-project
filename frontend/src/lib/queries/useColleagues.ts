@@ -14,7 +14,7 @@ export const useColleagues = () => {
     isError,
     status,
   } = useQuery<ColleagueType[]>({
-    queryKey: ['colleagues'],
+    queryKey: ["colleagues"],
     queryFn: fetchAllColleagues,
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -22,7 +22,7 @@ export const useColleagues = () => {
   });
 
   useEffect(() => {
-    if (status === 'success' && data) {
+    if (status === "success" && data) {
       setColleagues(data);
     }
   }, [data, status, setColleagues]);
