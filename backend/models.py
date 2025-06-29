@@ -33,7 +33,11 @@ class User(Base):
     password_hash = Column(String(256), nullable=False)
     role = Column(String(20), nullable=False, default="collegue")
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=datetime.now(timezone.utc),
+        onupdate=datetime.now(timezone.utc),
+    )
 
     def set_password(self, password):
         """Hashes and sets the user's password."""
@@ -42,35 +46,53 @@ class User(Base):
     def check_password(self, password):
         """Checks if the provided password matches the stored hash."""
         return check_password_hash(self.password_hash, password)
-    
+
+
 class RefreshToken(Base):
     """Defines the structure of the 'refresh_token' table in the database."""
-    
+
     __tablename__ = "refresh_token"
-    
+
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False) 
-    token_hash = Column(String(256), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token_hash = Column(String(512), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_revoked = Column(Boolean, default=False, nullable=False)
     
+    def set_token(self, token):
+        """Hashes and sets the refresh_token."""
+        self.token_hash = generate_password_hash(token)
+        
+    def check_token(self, token):
+        """Checks if the provided refresh_token matches the stored hash."""
+        return check_password_hash(self.token_hash, token)
+
     # relationships
-    user = relationship("User", foreign_keys=[user_id])   
+    user = relationship("User", foreign_keys=[user_id])
+
 
 class Review(Base):
     """Defines the structure of the 'reviews' table in the database."""
+
     __tablename__ = "reviews"
-    
+
     id = Column(Integer, primary_key=True)
     positive = Column(String(1000))
     negative = Column(String(1000))
-    adresed_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # User being reviewed
-    author_id = Column(Integer, ForeignKey("users.id"), nullable=False)   # User who wrote the review
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))   
-    
+    adresed_id = Column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )  # User being reviewed
+    author_id = Column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )  # User who wrote the review
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+
     # relationships
-    adresed = relationship("User", foreign_keys=[adresed_id])  # Connects to reviewed user
-    author = relationship("User", foreign_keys=[author_id])    # Connects to review author
+    adresed = relationship(
+        "User", foreign_keys=[adresed_id]
+    )  # Connects to reviewed user
+    author = relationship("User", foreign_keys=[author_id])  # Connects to review author
+
 
 # Database setup
 engine = create_engine(DATABASE_URL)

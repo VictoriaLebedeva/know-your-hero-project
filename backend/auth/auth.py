@@ -2,7 +2,7 @@ import os
 import jwt
 from utils import verify_token, generate_jwt, validate_credentials
 from flask import Blueprint, request, jsonify, make_response
-from models import Session, User
+from models import Session, User, RefreshToken
 from datetime import timedelta
 
 
@@ -42,8 +42,9 @@ def register():
         session.add(new_user)
         session.commit()
         session.close()
+    
     except Exception as e:
-        if 'session' in locals():
+        if "session" in locals():
             session.rollback()
             session.close()
         return jsonify({"message": f"Database error: {str(e)}"}), 500
@@ -63,39 +64,51 @@ def login():
     try:
         session = Session()
         user = session.query(User).filter_by(email=data["email"]).first()
+
+        if not user:
+            return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
+        elif not user.check_password(data["password"]):
+            return jsonify({"message": f"Incorrect password"}), 401
+        else:
+            response = make_response(jsonify({"message": "Login successful"}))
+            access_token, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
+            refresh_token, expiration_date = generate_jwt(user.id, user.role, timedelta(days=30))
+            print('Refresh:', refresh_token)
+            print('Expiraion:', expiration_date)
+
+            response.set_cookie(
+                "access_token",
+                value=access_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+            )
+
+            response.set_cookie(
+                "refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax",
+            )
+            
+            
+            new_refresh_token = RefreshToken()
+            new_refresh_token.set_token(refresh_token) 
+            new_refresh_token.user_id = user.id
+            new_refresh_token.expires_at = expiration_date
+            session.add(new_refresh_token)
+            session.commit()
+            
         session.close()
+
     except Exception as e:
-        if 'session' in locals():
+        if "session" in locals():
             session.rollback()
             session.close()
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
-    if not user:
-        return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
-    elif not user.check_password(data["password"]):
-        return jsonify({"message": f"Incorrect password"}), 401
-    else: 
-        response = make_response(jsonify({"message": "Login successful"}))
-        access_token = generate_jwt(user.id, user.role, timedelta(minutes=15))
-        refresh_token = generate_jwt(user.id, user.role, timedelta(days=30))
-
-        response.set_cookie(
-            "access_token",
-            value=access_token,
-            httponly=True,
-            secure=False,
-            samesite="Lax"
-        )
-        
-        response.set_cookie(
-            "refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=False,
-            samesite="Lax"
-        )
-        
-        return response     
+    return response
 
 
 @auth_bp.route("/api/users", methods=["GET"])
@@ -103,36 +116,30 @@ def get_users():
     """Retrieves a list of all users with their id, name, and email."""
 
     token_payload = verify_token(request)
-    
+
     if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401    
-    
+        return jsonify({"message": "Unathorized"}), 401
+
     session = Session()
     users = session.query(User).all()
-    
+
     return jsonify(
-        [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email
-            }
-            for user in users
-        ]
+        [{"id": user.id, "name": user.name, "email": user.email} for user in users]
     )
-    
+
+
 @auth_bp.route("/api/me", methods=["GET"])
 def get_user():
     """Fetches information about the currently authorized user based on the JWT token in the request."""
-    
+
     user_id = None
     token_payload = verify_token(request)
-    
+
     if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401    
-    
+        return jsonify({"message": "Unathorized"}), 401
+
     user_id = token_payload.get("user_id")
-    
+
     session = Session()
     user = session.query(User).filter_by(id=user_id).first()
     session.close()
@@ -140,31 +147,32 @@ def get_user():
     if not user:
         return jsonify({"message": "User not found"}), 404
 
-    return jsonify({
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
-        "created_at": user.created_at.isoformat(),
-    })
+    return jsonify(
+        {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "created_at": user.created_at.isoformat(),
+        }
+    )
+
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
     """Logs out the current user by clearing the authentication cookie."""
-    
+
     token_payload = verify_token(request)
-    
+
     if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401   
-    
+        return jsonify({"message": "Unathorized"}), 401
+
     response = make_response(jsonify({"message": "Log Out successful!"}))
     response.set_cookie(
-            "access_token",
-            value="",
-            max_age=0,
-            httponly=True,
-            secure=False,
-            samesite="Lax"
-        )
-    
+        "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
+    )
+    response.set_cookie(
+        "refresh_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
+    )
+
     return response

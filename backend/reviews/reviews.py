@@ -11,13 +11,14 @@ reviews_bp = Blueprint("reviews_bp", __name__)
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
+
 @reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():
     """Handles creating and retrieving reviews."""
 
     if verify_token(request) is None:
-        return jsonify({"message": "Unathorized"}), 401    
-    
+        return jsonify({"message": "Unathorized"}), 401
+
     try:
         session = Session()
         if request.method == "POST":
@@ -46,7 +47,7 @@ def handle_reviews():
                 "adresed_id": review.adresed_id,
                 "adresed_name": review.adresed.name,
                 "author_id": review.author_id,
-                "author_name": review.author.name, 
+                "author_name": review.author.name,
                 "created_at": review.created_at,
             }
             for review in reviews
@@ -54,6 +55,6 @@ def handle_reviews():
         session.close()
         return jsonify(reviews_data), 200
     except Exception as e:
-        if 'session' in locals():
+        if "session" in locals():
             session.close()
         return jsonify({"message": f"Database error: {str(e)}"}), 500
