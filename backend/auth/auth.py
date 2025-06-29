@@ -77,22 +77,41 @@ def login():
         return jsonify({"message": f"Incorrect password"}), 401
     else: 
         response = make_response(jsonify({"message": "Login successful"}))
-        token = jwt.encode(
+        access_token = jwt.encode(
             {
                 "user_id": user.id,
                 "role": user.role,
-                "exp": datetime.now(timezone.utc) + timedelta(hours=24),
+                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
             },
             SECRET_KEY,
             algorithm="HS256",
         )
         response.set_cookie(
             "access_token",
-            value=token,
+            value=access_token,
             httponly=True,
             secure=False,
             samesite="Lax"
         )
+        
+        refresh_token = jwt.encode(
+            {
+                "user_id": user.id,
+                "role": user.role,
+                "exp": datetime.now(timezone.utc) + timedelta(days=30),
+            },
+            SECRET_KEY,
+            algorithm="HS256",
+        )
+        
+        response.set_cookie(
+            "refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=False,
+            samesite="Lax"
+        )
+        
         return response     
 
 
