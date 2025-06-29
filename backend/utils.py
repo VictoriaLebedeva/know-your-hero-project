@@ -46,10 +46,14 @@ def validate_credentials(data):
     return None
 
 
-def set_auth_cookies_and_refresh_token(response, user, session, old_refresh_token_db=None):
+def set_auth_cookies_and_refresh_token(
+    response, user, session, old_refresh_token_db=None
+):
     """Helper to set cookies and create a new refresh token in DB."""
     access_token, _, _ = generate_jwt(user.id, user.role, timedelta(minutes=1))
-    refresh_token, jti, expiration_date = generate_jwt(user.id, user.role, timedelta(days=30))
+    refresh_token, jti, expiration_date = generate_jwt(
+        user.id, user.role, timedelta(days=30)
+    )
 
     response.set_cookie(
         "access_token",

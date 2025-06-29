@@ -1,7 +1,12 @@
 import os
 import jwt
 import uuid
-from utils import verify_token, generate_jwt, validate_credentials, set_auth_cookies_and_refresh_token
+from utils import (
+    verify_token,
+    generate_jwt,
+    validate_credentials,
+    set_auth_cookies_and_refresh_token,
+)
 from flask import Blueprint, request, jsonify, make_response
 from models import Session, User, RefreshToken
 from datetime import timedelta
@@ -62,7 +67,10 @@ def login():
         with Session() as session:
             user = session.query(User).filter_by(email=data["email"]).first()
             if not user:
-                return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
+                return (
+                    jsonify({"message": f"User with {data['email']} doesn't exist"}),
+                    401,
+                )
             elif not user.check_password(data["password"]):
                 return jsonify({"message": f"Incorrect password"}), 401
             else:
@@ -120,11 +128,6 @@ def get_user():
 def logout():
     """Logs out the current user by clearing the authentication cookie."""
 
-    token_payload = verify_token(request)
-
-    if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401
-
     response = make_response(jsonify({"message": "Log Out successful!"}))
     response.set_cookie(
         "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
@@ -143,22 +146,31 @@ def logout():
 
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
 def refresh():
+    """Refreshes the authentication token using the refresh token stored in cookies.
+    If the refresh token is valid, a new access token and refresh token are issued."""
 
     refresh_token = request.cookies.get("refresh_token")
     decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=["HS256"])
+    
     jti = decoded.get("jti")
     user_id = decoded.get("user_id")
+    
     try:
         with Session() as session:
             refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
             user = session.query(User).filter_by(id=user_id).first()
+
             if not refresh_token_db:
                 return jsonify({"message": f"No such token in a database"}), 401
             elif not user:
                 return jsonify({"message": f"No such user in a database"}), 401
             else:
                 response = make_response(jsonify({"message": "Login successful"}))
-                response = set_auth_cookies_and_refresh_token(response, user, session, old_refresh_token_db=refresh_token_db)
+                response = set_auth_cookies_and_refresh_token(
+                    response, user, session, old_refresh_token_db=refresh_token_db
+                )
+
             return response
+
     except Exception as e:
         return jsonify({"message": f"Database error: {str(e)}"}), 500
