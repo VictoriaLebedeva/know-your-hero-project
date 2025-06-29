@@ -1,7 +1,7 @@
 import os
 from datetime import datetime, timezone
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy import create_engine
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -42,6 +42,20 @@ class User(Base):
     def check_password(self, password):
         """Checks if the provided password matches the stored hash."""
         return check_password_hash(self.password_hash, password)
+    
+class RefreshToken(Base):
+    """Defines the structure of the 'refresh_token' table in the database."""
+    
+    __tablename__ = "refresh_token"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False) 
+    token_hash = Column(String(256), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    
+    # relationships
+    user = relationship("User", foreign_keys=[user_id])   
 
 class Review(Base):
     """Defines the structure of the 'reviews' table in the database."""
@@ -54,7 +68,7 @@ class Review(Base):
     author_id = Column(Integer, ForeignKey("users.id"), nullable=False)   # User who wrote the review
     created_at = Column(DateTime, default=datetime.now(timezone.utc))   
     
-    # Relationships
+    # relationships
     adresed = relationship("User", foreign_keys=[adresed_id])  # Connects to reviewed user
     author = relationship("User", foreign_keys=[author_id])    # Connects to review author
 

@@ -1,9 +1,9 @@
 import os
 import jwt
-from utils import verify_token
+from utils import verify_token, generate_jwt, validate_credentials
 from flask import Blueprint, request, jsonify, make_response
 from models import Session, User
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 
 # Initialize the Flask application
@@ -11,6 +11,7 @@ auth_bp = Blueprint("auth_bp", __name__)
 
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
+
 
 @auth_bp.route("/api/auth/register", methods=["POST"])
 def register():
@@ -55,12 +56,10 @@ def login():
     """Authenticates a user by verifying email and password, then issues a JWT token as an HTTP-only cookie if successful."""
 
     data = request.get_json()
-    if not data or not isinstance(data, dict):
-        return jsonify({"message": "Invalid input. JSON body required."}), 400
-    if "email" not in data or not data["email"]:
-        return jsonify({"message": "Email is required"}), 400
-    if "password" not in data or not data["password"]:
-        return jsonify({"message": "Password is required"}), 400
+    error = validate_credentials(data)
+    if error:
+        return jsonify({"message": error}), 400
+
     try:
         session = Session()
         user = session.query(User).filter_by(email=data["email"]).first()
@@ -77,31 +76,15 @@ def login():
         return jsonify({"message": f"Incorrect password"}), 401
     else: 
         response = make_response(jsonify({"message": "Login successful"}))
-        access_token = jwt.encode(
-            {
-                "user_id": user.id,
-                "role": user.role,
-                "exp": datetime.now(timezone.utc) + timedelta(minutes=15),
-            },
-            SECRET_KEY,
-            algorithm="HS256",
-        )
+        access_token = generate_jwt(user.id, user.role, timedelta(minutes=15))
+        refresh_token = generate_jwt(user.id, user.role, timedelta(days=30))
+
         response.set_cookie(
             "access_token",
             value=access_token,
             httponly=True,
             secure=False,
             samesite="Lax"
-        )
-        
-        refresh_token = jwt.encode(
-            {
-                "user_id": user.id,
-                "role": user.role,
-                "exp": datetime.now(timezone.utc) + timedelta(days=30),
-            },
-            SECRET_KEY,
-            algorithm="HS256",
         )
         
         response.set_cookie(
