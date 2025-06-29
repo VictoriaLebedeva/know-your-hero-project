@@ -1,5 +1,6 @@
 import os
 import jwt
+import uuid
 from utils import verify_token, generate_jwt, validate_credentials
 from flask import Blueprint, request, jsonify, make_response
 from models import Session, User, RefreshToken
@@ -34,6 +35,7 @@ def register():
 
         # Create a new user instance
         new_user = User()
+        new_user.id = str(uuid.uuid4())
         new_user.email = data["email"]
         new_user.name = data["name"]
         new_user.set_password(data["password"])
@@ -42,7 +44,7 @@ def register():
         session.add(new_user)
         session.commit()
         session.close()
-    
+
     except Exception as e:
         if "session" in locals():
             session.rollback()
@@ -71,10 +73,12 @@ def login():
             return jsonify({"message": f"Incorrect password"}), 401
         else:
             response = make_response(jsonify({"message": "Login successful"}))
-            access_token, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
-            refresh_token, expiration_date = generate_jwt(user.id, user.role, timedelta(days=30))
-            print('Refresh:', refresh_token)
-            print('Expiraion:', expiration_date)
+            access_token, _, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
+            refresh_token, jti, expiration_date = generate_jwt(
+                user.id, user.role, timedelta(days=30)
+            )
+            print("Refresh:", refresh_token)
+            print("Expiraion:", expiration_date)
 
             response.set_cookie(
                 "access_token",
@@ -91,15 +95,15 @@ def login():
                 secure=False,
                 samesite="Lax",
             )
-            
-            
+
             new_refresh_token = RefreshToken()
-            new_refresh_token.set_token(refresh_token) 
+            new_refresh_token.id = jti
+            new_refresh_token.set_token(refresh_token)
             new_refresh_token.user_id = user.id
             new_refresh_token.expires_at = expiration_date
             session.add(new_refresh_token)
             session.commit()
-            
+
         session.close()
 
     except Exception as e:
@@ -172,7 +176,66 @@ def logout():
         "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
     )
     response.set_cookie(
-        "refresh_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
+        "refresh_token",
+        value="",
+        max_age=0,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
     )
 
     return response
+
+
+# @auth_bp.route("/api/auth/refresh", methods=["POST"])
+# def refresh():
+
+#     refresh_token = request.cookies.get("refresh_token")
+
+#     try:
+#         session = Session()
+#         user = session.query(User).filter_by(email=data["email"]).first()
+
+#         if not user:
+#             return jsonify({"message": f"User with {data['email']} doesn't exist"}), 401
+#         elif not user.check_password(data["password"]):
+#             return jsonify({"message": f"Incorrect password"}), 401
+#         else:
+#             response = make_response(jsonify({"message": "Login successful"}))
+#             access_token, _ = generate_jwt(user.id, user.role, timedelta(minutes=15))
+#             refresh_token, expiration_date = generate_jwt(
+#                 user.id, user.role, timedelta(days=30)
+#             )
+#             print("Refresh:", refresh_token)
+#             print("Expiraion:", expiration_date)
+
+#             response.set_cookie(
+#                 "access_token",
+#                 value=access_token,
+#                 httponly=True,
+#                 secure=False,
+#                 samesite="Lax",
+#             )
+
+#             response.set_cookie(
+#                 "refresh_token",
+#                 value=refresh_token,
+#                 httponly=True,
+#                 secure=False,
+#                 samesite="Lax",
+#             )
+
+#             new_refresh_token = RefreshToken()
+#             new_refresh_token.set_token(refresh_token)
+#             new_refresh_token.user_id = user.id
+#             new_refresh_token.expires_at = expiration_date
+#             session.add(new_refresh_token)
+#             session.commit()
+
+#         session.close()
+
+#     except Exception as e:
+#         if "session" in locals():
+#             session.rollback()
+#             session.close()
+#         return jsonify({"message": f"Database error: {str(e)}"}), 500

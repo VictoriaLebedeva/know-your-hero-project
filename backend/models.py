@@ -27,7 +27,7 @@ class User(Base):
     __tablename__ = "users"
 
     # Define table attributes
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     email = Column(String(120), nullable=False, unique=True)
     name = Column(String(256), nullable=False)
     password_hash = Column(String(256), nullable=False)
@@ -53,16 +53,16 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_token"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id = Column(String(512), primary_key=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     token_hash = Column(String(512), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_revoked = Column(Boolean, default=False, nullable=False)
-    
+
     def set_token(self, token):
         """Hashes and sets the refresh_token."""
         self.token_hash = generate_password_hash(token)
-        
+
     def check_token(self, token):
         """Checks if the provided refresh_token matches the stored hash."""
         return check_password_hash(self.token_hash, token)
@@ -80,10 +80,10 @@ class Review(Base):
     positive = Column(String(1000))
     negative = Column(String(1000))
     adresed_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False
+        String(36), ForeignKey("users.id"), nullable=False
     )  # User being reviewed
     author_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False
+        String(36), ForeignKey("users.id"), nullable=False
     )  # User who wrote the review
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 

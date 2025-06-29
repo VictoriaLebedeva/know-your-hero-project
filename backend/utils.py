@@ -1,9 +1,23 @@
 import jwt
+import uuid
 import os
 from datetime import datetime, timezone
 
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
+
+
+def generate_jwt(user_id, role, expiry):
+
+    expiration_date = datetime.now(timezone.utc) + expiry
+    jti = str(uuid.uuid4())
+    new_token = jwt.encode(
+        {"jti": jti, "user_id": user_id, "role": role, "exp": expiration_date},
+        SECRET_KEY,
+        algorithm="HS256",
+    )
+
+    return new_token, jti, expiration_date
 
 
 def verify_token(request):
@@ -20,18 +34,6 @@ def verify_token(request):
     except jwt.InvalidTokenError as e:
         print("Incalid token:", e)
         return None
-
-
-def generate_jwt(user_id, role, expiry):
-    
-    expiration_date = datetime.now(timezone.utc) + expiry
-    new_token = jwt.encode(
-        {"user_id": user_id, "role": role, "exp": expiration_date},
-        SECRET_KEY,
-        algorithm="HS256",
-    )
-
-    return new_token, expiration_date
 
 
 def validate_credentials(data):
