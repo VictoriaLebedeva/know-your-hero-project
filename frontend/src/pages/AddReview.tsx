@@ -78,28 +78,14 @@ const AddReview: FC = () => {
 
         try {
             await createReview(dataToSubmit);
-            toast("Review successfully created!");
+            toast.success("Review successfully created!");
             setFormData({
                 ...initialFormData,
                 author_id: user?.id ?? null,
             });
-        } catch (error: any) {
-            if (error.response?.status === 401) {
-                try {
-                    await refreshToken();
 
-                    await createReview(dataToSubmit);
-                    toast("Review successfully created!");
-                    setFormData({
-                        ...initialFormData,
-                        author_id: user?.id ?? null,
-                    });
-                } catch (refreshError) {
-                    toast.error("Session expired, please log in again.");
-                }
-            } else {
-                toast.error(`Creation failed: ${error.message}`);
-            }
+        } catch (error: any) {
+            toast.error(`Creation failed: ${error.message}`);
         }
     };
 

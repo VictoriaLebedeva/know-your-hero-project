@@ -1,35 +1,36 @@
+import { fetchWithAuth } from '@/lib/fetchUtils';
+
 // get informaton abot current user
 export const fetchUser = async () => {
   try {
-    const res = await fetch("/api/me", { credentials: "include" });
 
-    if (res.status === 401) {
-      try {
-        await refreshToken();
-        const retryRes = await fetch("/api/me", { credentials: "include" });
-        if (!retryRes.ok) throw new Error("Failed to fetch user after refresh");
-        return retryRes.json();
-      } catch (refreshError) {
-        throw new Error("Session expired, please log in again.");
-      }
-    }
+    const res = await fetchWithAuth("/api/me");
 
     if (!res.ok) {
-      throw new Error("Failed to fetch user");
+      const errorData = await res.json().catch(() => ({ message: "Failed to fetch user data" }));
+      throw new Error(errorData.message || "Failed to fetch user data");
     }
 
     return res.json();
+
   } catch (error: any) {
+    console.error("Could not fetch user:", error.message);
     throw error;
   }
 };
 
+
 // get list of all users
 export const fetchAllColleagues = async () => {
-  const res = await fetch("/api/users", { credentials: "include" });
-  if (!res.ok) throw new Error('Failed to fetch colleagues');
+  const res = await fetchWithAuth("/api/users");
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch colleagues');
+  }
+
   return res.json();
-}
+};
 
 // log in to the system
 export const login = async (email: string, password: string) => {
