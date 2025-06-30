@@ -4,7 +4,6 @@ import { useUserStore } from "../stores/userStore";
 import { useColleagues } from "../lib/queries/useColleagues";
 import { useColleagueStore } from "../stores/colleagueStore";
 import { createReview } from "@/lib/api/reviews";
-import { refreshToken } from "@/lib/api/auth";
 
 import { Link } from "react-router-dom"
 
@@ -25,8 +24,8 @@ import {
 type FormData = {
     positive: string;
     negative: string;
-    adresed_id: number | null;
-    author_id: number | null;
+    adresed_id: string | null;
+    author_id: string | null;
 };
 
 const initialFormData = {
@@ -41,6 +40,7 @@ const AddReview: FC = () => {
     useColleagues();
     const colleagues = useColleagueStore((s) => s.colleagues);
     const user = useUserStore((s) => s.user);
+    
 
     const [formData, setFormData] = useState<FormData>(initialFormData)
 
@@ -62,7 +62,7 @@ const AddReview: FC = () => {
     const handleColleagueChange = (value: string) => {
         setFormData((prev) => ({
             ...prev,
-            adresed_id: Number(value),
+            adresed_id: value,
         }));
     };
 

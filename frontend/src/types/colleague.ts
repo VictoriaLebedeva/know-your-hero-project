@@ -1,5 +1,5 @@
 export type ColleagueType = {
-    id: number;
+    id: string;
     name: string;
     email: string;
     created_at: string;

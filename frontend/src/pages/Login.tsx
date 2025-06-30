@@ -31,10 +31,10 @@ const Login: FC = () => {
         e.preventDefault();
         try {
             await login(formData.email, formData.password);
-            toast("Login successful!");
+            toast.success("Login successful!");
             navigate("/reviews");
         } catch (error) {
-            toast.error("Login failed: ${(error as Error).message}");
+            toast.error(`Login failed: ${(error as Error).message}`);
         }
     };
 

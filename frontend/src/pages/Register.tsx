@@ -45,7 +45,7 @@ const Register: FC = () => {
 
     try {
       await login(formData.email, formData.password);
-      toast("Registration successful!");
+      toast.success("Registration successful!");
       navigate("/reviews");
     } catch (error) {
       toast.error(`Login failed: ${(error as Error).message}`);
