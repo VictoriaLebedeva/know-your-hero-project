@@ -20,40 +20,38 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 @reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():
     """Handles creating and retrieving reviews."""
-
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
     try:
         with Session() as session:
-            # POST
             if request.method == "POST":
                 data = request.get_json()
-
-                # check for required fields
-                required_fields = ["adresed_id", "author_id"]
+                
+                # check required fields
+                required_fields = ["adresed_id", "author_id"] 
                 check_required_fields(data, required_fields)
+                
+                # any of positive or negative reviews should be filled 
+                if not ((data.get("positive") or "").strip() or (data.get("negative") or "").strip()):
+                    raise MissingFieldsError()
 
-                # check for creating review for user themselves
+                # check if user tries to create reviews about themselves
                 if user_id == data["adresed_id"]:
                     raise SelfReviewNotAllowedError()
-
-                # check for existance of addressed user
-                target_user = (
-                    session.query(User).filter_by(id=data["adresed_id"]).first()
-                )
+                
+                target_user = session.query(User).filter_by(id=data["adresed_id"]).first()
                 if not target_user:
                     raise ReviewTargetNotFoundError()
 
-                new_review = Review()
-                new_review.positive = data["positive"]
-                new_review.negative = data["negative"]
-                new_review.adresed_id = data["adresed_id"]
-                new_review.author_id = data["author_id"]
-
+                new_review = Review(
+                    positive=data["positive"],
+                    negative=data["negative"],
+                    adresed_id=data["adresed_id"],
+                    author_id=data["author_id"],
+                )
                 session.add(new_review)
                 session.commit()
-
                 return jsonify({"message": "Review created successfully"}), 201
 
             # GET
@@ -72,11 +70,8 @@ def handle_reviews():
                 for review in reviews
             ]
             return jsonify(reviews_data), 200
-    except (
-        MissingFieldsError,
-        SelfReviewNotAllowedError,
-        ReviewTargetNotFoundError,
-    ):
+
+    except (MissingFieldsError, SelfReviewNotAllowedError, ReviewTargetNotFoundError):
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
