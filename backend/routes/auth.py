@@ -130,10 +130,10 @@ def refresh():
 
     refresh_token = request.cookies.get("refresh_token")
     decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=["HS256"])
-    
+
     jti = decoded.get("jti")
     user_id = decoded.get("user_id")
-    
+
     try:
         with Session() as session:
             refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
@@ -155,14 +155,16 @@ def refresh():
         return jsonify({"message": f"Database error: {str(e)}"}), 500
 
 
-
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
     """Logs out the current user by clearing the authentication cookie and revoking the refresh token in the database."""
     with Session() as session:
         revoked = revoke_refresh_token_by_request(request, session)
     if not revoked:
-        return jsonify({"message": "No valid refresh token found or already revoked"}), 401
+        return (
+            jsonify({"message": "No valid refresh token found or already revoked"}),
+            401,
+        )
 
     response = make_response(jsonify({"message": "Log Out successful!"}))
     response.set_cookie(

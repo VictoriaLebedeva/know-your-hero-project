@@ -86,7 +86,7 @@ def set_auth_cookies_and_refresh_token(
 def revoke_refresh_token(jti: str, session):
     """Revokes the refresh token with the given jti in the database."""
     refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
-    
+
     if refresh_token_db:
         refresh_token_db.is_revoked = True
         session.add(refresh_token_db)

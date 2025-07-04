@@ -2,6 +2,7 @@ import os
 from utils.auth_utils import verify_token
 from flask import Blueprint, request, jsonify, make_response
 from models.models import Session, Review
+from errors.api_errors import MissingTokenError
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
@@ -14,8 +15,9 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 def handle_reviews():
     """Handles creating and retrieving reviews."""
 
-    if verify_token(request) is None:
-        return jsonify({"message": "Unathorized"}), 401
+    token_data = verify_token(request)
+    if token_data is None:
+        raise MissingTokenError(token=token_data)
 
     try:
         session = Session()
