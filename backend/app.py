@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_cors import CORS
-from models import init_db
-from auth.auth import auth_bp
-from reviews.reviews import reviews_bp
+from models.models import init_db
+from routes.auth import auth_bp
+from routes.reviews import reviews_bp
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], supports_credentials=True)

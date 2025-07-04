@@ -2,7 +2,7 @@ import jwt
 import uuid
 import os
 from datetime import datetime, timezone, timedelta
-from models import RefreshToken
+from models.models import RefreshToken
 
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")

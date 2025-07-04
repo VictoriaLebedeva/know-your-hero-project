@@ -1,15 +1,14 @@
 import os
 import jwt
 import uuid
-from utils import (
+from utils.auth_utils import (
     verify_token,
     validate_credentials,
     set_auth_cookies_and_refresh_token,
     revoke_refresh_token_by_request,
 )
 from flask import Blueprint, request, jsonify, make_response
-from models import Session, User, RefreshToken
-from datetime import timedelta
+from models.models import Session, User, RefreshToken
 
 
 # Initialize the Flask application

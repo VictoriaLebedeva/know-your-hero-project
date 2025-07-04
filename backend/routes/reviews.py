@@ -1,9 +1,7 @@
 import os
-import jwt
-from utils import verify_token
+from utils.auth_utils import verify_token
 from flask import Blueprint, request, jsonify, make_response
-from models import Session, Review
-from datetime import datetime, timedelta, timezone
+from models.models import Session, Review
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
