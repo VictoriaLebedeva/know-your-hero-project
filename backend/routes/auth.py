@@ -7,7 +7,8 @@ from models.models import Session, User, RefreshToken
 from errors.api_errors import (
     UserNotFoundError,
     EmailExistsError,
-    DatabaseError
+    DatabaseError, 
+    InvalidCredentialsError
 )
 
 from utils.auth_utils import (
@@ -66,29 +67,39 @@ def register():
 
 @auth_bp.route("/api/auth/login", methods=["POST"])
 def login():
-    """Authenticates a user by verifying email and password, then issues a JWT token as an HTTP-only cookie if successful."""
-
+    """
+    Authenticates a user by verifying email and password,
+    then issues a JWT token as an HTTP-only cookie if successful.
+    """
     data = request.get_json()
-    error = validate_credentials(data)
-    if error:
-        return jsonify({"message": error}), 400
+    
+    # check for required fields
+    required_fields = ["email", "password"]
+    check_required_fields(data, required_fields)
 
     try:
         with Session() as session:
+            # check if email exists in database
             user = session.query(User).filter_by(email=data["email"]).first()
             if not user:
-                return (
-                    jsonify({"message": f"User with {data['email']} doesn't exist"}),
-                    401,
-                )
-            elif not user.check_password(data["password"]):
-                return jsonify({"message": f"Incorrect password"}), 401
-            else:
-                response = make_response(jsonify({"message": "Login successful"}))
-                response = set_auth_cookies_and_refresh_token(response, user, session)
+                raise UserNotFoundError()
+            
+            # check if password is correct
+            if not user.check_password(data["password"]):
+                raise InvalidCredentialsError()
+
+            response = make_response(jsonify({"message": "Login successful"}))
+            response = set_auth_cookies_and_refresh_token(response, user, session)
             return response
+
+    except UserNotFoundError:
+        raise
+    except InvalidCredentialsError:
+        raise
     except Exception as e:
-        return jsonify({"message": f"Database error: {str(e)}"}), 500
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing review data")
+
 
 
 @auth_bp.route("/api/users", methods=["GET"])
