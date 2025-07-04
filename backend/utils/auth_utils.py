@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from models.models import RefreshToken
 from errors.api_errors import (
     MissingTokenError,
-    TokenValidationError,
+    MissingFieldsError,
     ExpiredTokenError,
     InvalidTokenError,
     ServerError,
@@ -17,10 +17,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 def generate_jwt(user_id, role, expiry):
     """Generates a JWT token with user ID, role, and expiration date."""
-   
+
     expiration_date = datetime.now(timezone.utc) + expiry
     jti = str(uuid.uuid4())
-    
+
     new_token = jwt.encode(
         {"jti": jti, "user_id": user_id, "role": role, "exp": expiration_date},
         SECRET_KEY,
@@ -49,6 +49,16 @@ def verify_token(request, token_name):
         raise InvalidTokenError(token_name)
     except Exception as e:
         raise ServerError()
+
+
+def check_required_fields(data, required_fields):
+    """Validates the required fields in the request."""
+
+    missing_fields = [
+        field for field in required_fields if field not in data or not data[field]
+    ]
+    if missing_fields:
+        raise MissingFieldsError(missing_fields)
 
 
 def validate_credentials(data):

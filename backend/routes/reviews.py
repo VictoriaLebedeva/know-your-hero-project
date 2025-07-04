@@ -8,6 +8,7 @@ from errors.api_errors import (
     ReviewTargetNotFoundError,
     DatabaseError,
 )
+from utils.auth_utils import check_required_fields
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
@@ -31,14 +32,7 @@ def handle_reviews():
 
                 # check for required fields
                 required_fields = ["adresed_id", "author_id"]
-                missing_fields = [
-                    field
-                    for field in required_fields
-                    if field not in data or not data[field]
-                ]
-
-                if missing_fields:
-                    raise MissingFieldsError(missing_fields)
+                check_required_fields(data, required_fields)
 
                 # check for creating review for user themselves
                 if user_id == data["adresed_id"]:
@@ -78,7 +72,11 @@ def handle_reviews():
                 for review in reviews
             ]
             return jsonify(reviews_data), 200
-    except (MissingFieldsError, SelfReviewNotAllowedError, ReviewTargetNotFoundError) as e:
+    except (
+        MissingFieldsError,
+        SelfReviewNotAllowedError,
+        ReviewTargetNotFoundError,
+    ):
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")

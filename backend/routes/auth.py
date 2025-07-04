@@ -2,13 +2,18 @@ import os
 import jwt
 import uuid
 
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, current_app
 from models.models import Session, User, RefreshToken
-from errors.api_errors import UserNotFoundError
+from errors.api_errors import (
+    UserNotFoundError,
+    EmailExistsError,
+    DatabaseError
+)
 
 from utils.auth_utils import (
     verify_token,
     validate_credentials,
+    check_required_fields,
     set_auth_cookies_and_refresh_token,
     revoke_refresh_token_by_request,
 )
@@ -23,35 +28,38 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 @auth_bp.route("/api/auth/register", methods=["POST"])
 def register():
-    """Handles user registration by creating a new user if the email is not already registered. Returns a success message or an error if the email exists."""
-
+    """
+    Handles user registration by creating a new user if the email is not already registered.
+    Returns a success message or an error if the email exists.
+    """
     data = request.get_json()
-    if not data or not isinstance(data, dict):
-        return jsonify({"message": "Invalid input. JSON body required."}), 400
+
     required_fields = ["email", "name", "password"]
-    for field in required_fields:
-        if field not in data or not data[field]:
-            return jsonify({"message": f"Missing or empty field: {field}"}), 400
+    check_required_fields(data, required_fields)
 
     try:
         with Session() as session:
             # Check if a user with the given email already exists
             if session.query(User).filter_by(email=data["email"]).first():
-                return jsonify({"message": "Email already registered"}), 400
+                raise EmailExistsError()
 
             # Create a new user instance
-            new_user = User()
-            new_user.id = str(uuid.uuid4())
-            new_user.email = data["email"]
-            new_user.name = data["name"]
+            new_user = User(
+                id=str(uuid.uuid4()),
+                email=data["email"],
+                name=data["name"],
+                role=data.get("role", "colleague")
+            )
             new_user.set_password(data["password"])
-            new_user.role = data.get("role", "colleague")
 
             session.add(new_user)
             session.commit()
 
+    except EmailExistsError:
+        raise
     except Exception as e:
-        return jsonify({"message": f"Database error: {str(e)}"}), 500
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing review data")
 
     return jsonify({"message": "User created successfully"}), 201
 
