@@ -1,14 +1,17 @@
 import os
 import jwt
 import uuid
+
+from flask import Blueprint, request, jsonify, make_response
+from models.models import Session, User, RefreshToken
+from errors.api_errors import UserNotFoundError
+
 from utils.auth_utils import (
     verify_token,
     validate_credentials,
     set_auth_cookies_and_refresh_token,
     revoke_refresh_token_by_request,
 )
-from flask import Blueprint, request, jsonify, make_response
-from models.models import Session, User, RefreshToken
 
 
 # Initialize the Flask application
@@ -84,10 +87,7 @@ def login():
 def get_users():
     """Retrieves a list of all users with their id, name, and email."""
 
-    token_payload = verify_token(request)
-
-    if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401
+    verify_token(request, "access_token")
 
     with Session() as session:
         users = session.query(User).all()
@@ -100,18 +100,15 @@ def get_users():
 def get_user():
     """Fetches information about the currently authorized user based on the JWT token in the request."""
 
-    user_id = None
-    token_payload = verify_token(request)
-
-    if token_payload is None:
-        return jsonify({"message": "Unathorized"}), 401
-
+    token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
     with Session() as session:
+
         user = session.query(User).filter_by(id=user_id).first()
         if not user:
-            return jsonify({"message": "User not found"}), 404
+            raise UserNotFoundError
+
         return jsonify(
             {
                 "id": user.id,
@@ -158,6 +155,7 @@ def refresh():
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
     """Logs out the current user by clearing the authentication cookie and revoking the refresh token in the database."""
+
     with Session() as session:
         revoked = revoke_refresh_token_by_request(request, session)
     if not revoked:

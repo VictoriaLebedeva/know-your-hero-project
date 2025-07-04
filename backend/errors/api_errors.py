@@ -2,6 +2,7 @@ from flask import jsonify
 from werkzeug.exceptions import HTTPException
 from errors.error_codes import ErrorCodes
 
+
 class APIError(Exception):
     """Base class for all API errors"""
 
@@ -68,28 +69,34 @@ class UserNotFoundError(APIError):
 class MissingTokenError(APIError):
     def __init__(self, token):
         super().__init__(
-            f"Authentication {token} is required", 400, ErrorCodes.MISSING_TOKEN
+            f"Unauthorized: Authentication {token} is required",
+            401,
+            ErrorCodes.MISSING_TOKEN,
         )
 
 
 class InvalidTokenError(APIError):
     def __init__(self, token):
         super().__init__(
-            f"Invalid authentication {token}", 401, ErrorCodes.INVALID_TOKEN
+            f"Unauthorized: Invalid authentication {token}",
+            401,
+            ErrorCodes.INVALID_TOKEN,
         )
 
 
 class ExpiredTokenError(APIError):
     def __init__(self, token):
         super().__init__(
-            f"Authentication {token} has expired", 401, ErrorCodes.EXPIRED_TOKEN
+            f"Unauthorized: Authentication {token} has expired",
+            401,
+            ErrorCodes.EXPIRED_TOKEN,
         )
 
 
 class TokenRevokedError(APIError):
     def __init__(self):
         super().__init__(
-            "Refresh token has already been revoked",
+            "Unauthorized: Refresh token has already been revoked",
             401,
             ErrorCodes.TOKEN_ALREADY_REVOKED,
         )

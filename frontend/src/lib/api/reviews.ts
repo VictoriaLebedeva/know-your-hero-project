@@ -6,7 +6,7 @@ export const fetchAllReviews = async () => {
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to fetch reviews');
+    throw new Error(errorData.message || "Failed to fetch reviews");
   }
 
   const data = await res.json();
@@ -27,7 +27,7 @@ export const createReview = async (reviewData: any) => {
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to create review');
+    throw new Error(errorData.message || "Failed to create review");
   }
 
   return res.json();

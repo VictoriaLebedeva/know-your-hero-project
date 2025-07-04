@@ -3,6 +3,13 @@ import uuid
 import os
 from datetime import datetime, timezone, timedelta
 from models.models import RefreshToken
+from errors.api_errors import (
+    MissingTokenError,
+    TokenValidationError,
+    ExpiredTokenError,
+    InvalidTokenError,
+    ServerError,
+)
 
 # Get SECRET_KEY
 SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -10,8 +17,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 def generate_jwt(user_id, role, expiry):
     """Generates a JWT token with user ID, role, and expiration date."""
+   
     expiration_date = datetime.now(timezone.utc) + expiry
     jti = str(uuid.uuid4())
+    
     new_token = jwt.encode(
         {"jti": jti, "user_id": user_id, "role": role, "exp": expiration_date},
         SECRET_KEY,
@@ -21,18 +30,25 @@ def generate_jwt(user_id, role, expiry):
     return new_token, jti, expiration_date
 
 
-def verify_token(request):
+def verify_token(request, token_name):
     """Validates JWT token from cookie"""
-    token = request.cookies.get("access_token")
-    if not token:
-        return None
+
+    token = request.cookies.get(token_name)
+
+    if token is None:
+        raise MissingTokenError(token_name)
+
     try:
+
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         return decoded
+
     except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError as e:
-        return None
+        raise ExpiredTokenError(token_name)
+    except jwt.InvalidTokenError:
+        raise InvalidTokenError(token_name)
+    except Exception as e:
+        raise ServerError()
 
 
 def validate_credentials(data):
