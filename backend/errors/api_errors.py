@@ -91,8 +91,8 @@ class ExpiredTokenError(APIError):
             401,
             ErrorCodes.EXPIRED_TOKEN,
         )
-        
-        
+
+
 class TokenNotFoundError(APIError):
     def __init__(self):
         super().__init__(

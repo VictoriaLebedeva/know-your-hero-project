@@ -57,6 +57,7 @@ def check_required_fields(data, required_fields):
     missing_fields = [
         field for field in required_fields if field not in data or not data[field]
     ]
+
     if missing_fields:
         raise MissingFieldsError(missing_fields)
 
@@ -109,7 +110,7 @@ def set_auth_cookies_and_refresh_token(
     return response
 
 
-def revoke_refresh_token(jti: str, session):
+def revoke_refresh_token(jti, session):
     """Revokes the refresh token with the given jti in the database."""
     refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
 

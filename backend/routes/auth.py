@@ -10,14 +10,13 @@ from errors.api_errors import (
     EmailExistsError,
     DatabaseError,
     InvalidCredentialsError,
-    TokenRevokedError, 
-    TokenNotFoundError
+    TokenRevokedError,
+    TokenNotFoundError,
 )
 from utils.auth_utils import (
     verify_token,
     check_required_fields,
-    set_auth_cookies_and_refresh_token,
-    revoke_refresh_token_by_request,
+    set_auth_cookies_and_refresh_token
 )
 
 
@@ -93,9 +92,7 @@ def login():
             response = set_auth_cookies_and_refresh_token(response, user, session)
             return response
 
-    except UserNotFoundError:
-        raise
-    except InvalidCredentialsError:
+    except (UserNotFoundError, InvalidCredentialsError):
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
@@ -164,7 +161,7 @@ def refresh():
 
     try:
         with Session() as session:
-            
+
             refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
             if not refresh_token_db:
                 raise TokenNotFoundError()
@@ -182,11 +179,7 @@ def refresh():
 
             return response
 
-    except TokenRevokedError:
-        raise
-    except TokenNotFoundError:
-        raise
-    except UserNotFoundError:
+    except (TokenRevokedError, TokenNotFoundError, UserNotFoundError):
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
@@ -195,27 +188,49 @@ def refresh():
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
-    """Logs out the current user by clearing the authentication cookie and revoking the refresh token in the database."""
+    """Logs out the current user by clearing the authentication cookie
+    and revoking the refresh token in the database."""
 
-    with Session() as session:
-        revoked = revoke_refresh_token_by_request(request, session)
-    if not revoked:
-        return (
-            jsonify({"message": "No valid refresh token found or already revoked"}),
-            401,
+    token_payload = verify_token(request, "refresh_token")
+    jti = token_payload.get("jti")
+
+    try:
+        with Session() as session:
+
+            refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
+            if not refresh_token_db:
+                raise TokenNotFoundError()
+            if refresh_token_db.is_revoked:
+                raise TokenRevokedError()
+
+            refresh_token_db.is_revoked = True
+            session.add(refresh_token_db)
+            session.commit()
+
+    except (TokenNotFoundError, TokenRevokedError) as e:
+        current_app.logger.error(f"Refresh Token Error: {str(e)}")
+    except Exception as e:
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing token")
+    finally:
+        response = make_response(jsonify({"message": "Log Out successful!"}))
+
+        response.set_cookie(
+            "access_token",
+            value="",
+            max_age=0,
+            httponly=True,
+            secure=False,
+            samesite="Lax",
         )
 
-    response = make_response(jsonify({"message": "Log Out successful!"}))
-    response.set_cookie(
-        "access_token", value="", max_age=0, httponly=True, secure=False, samesite="Lax"
-    )
-    response.set_cookie(
-        "refresh_token",
-        value="",
-        max_age=0,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-    )
+        response.set_cookie(
+            "refresh_token",
+            value="",
+            max_age=0,
+            httponly=True,
+            secure=False,
+            samesite="Lax",
+        )
 
-    return response
+        return response
