@@ -2,6 +2,9 @@ import jwt
 import uuid
 import os
 from datetime import datetime, timezone, timedelta
+
+from flask import current_app
+
 from models.models import RefreshToken
 from errors.api_errors import (
     MissingTokenError,
@@ -9,9 +12,6 @@ from errors.api_errors import (
     InvalidTokenError,
     ServerError,
 )
-
-# Get SECRET_KEY
-SECRET_KEY = os.environ.get("SECRET_KEY")
 
 
 def generate_jwt(user_id, role, expiry):
@@ -21,8 +21,13 @@ def generate_jwt(user_id, role, expiry):
     jti = str(uuid.uuid4())
 
     new_token = jwt.encode(
-        {"jti": jti, "user_id": user_id, "role": role, "exp": expiration_date},
-        SECRET_KEY,
+        {
+            "jti": jti,
+            "user_id": user_id,
+            "role": role,
+            "exp": expiration_date
+        },
+        current_app.config["SECRET_KEY"],
         algorithm="HS256",
     )
 
@@ -39,7 +44,9 @@ def verify_token(request, token_name):
 
     try:
 
-        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        decoded = jwt.decode(
+            token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+        )
         return decoded
 
     except jwt.ExpiredSignatureError:
@@ -50,13 +57,20 @@ def verify_token(request, token_name):
         raise ServerError()
 
 
+
 def set_auth_cookies_and_refresh_token(
     response, user, session, old_refresh_token_db=None
 ):
     """Helper to set cookies and create a new refresh token in DB."""
-    access_token, _, _ = generate_jwt(user.id, user.role, timedelta(days=15))
+    access_token, _, _ = generate_jwt(
+        user.id,
+        user.role,
+        timedelta(seconds=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"]),
+    )
     refresh_token, jti, expiration_date = generate_jwt(
-        user.id, user.role, timedelta(days=90)
+        user.id,
+        user.role,
+        timedelta(seconds=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"]),
     )
 
     response.set_cookie(
@@ -66,6 +80,7 @@ def set_auth_cookies_and_refresh_token(
         secure=False,
         samesite="Lax",
     )
+    
     response.set_cookie(
         "refresh_token",
         value=refresh_token,
@@ -82,8 +97,10 @@ def set_auth_cookies_and_refresh_token(
     new_refresh_token.set_token(refresh_token)
     new_refresh_token.user_id = user.id
     new_refresh_token.expires_at = expiration_date
+    
     session.add(new_refresh_token)
     session.commit()
+    
     return response
 
 
@@ -105,7 +122,9 @@ def get_jti_from_refresh_token(request):
     if not refresh_token:
         return None
     try:
-        decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=["HS256"])
+        decoded = jwt.decode(
+            refresh_token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+        )
         return decoded.get("jti")
     except Exception:
         return None

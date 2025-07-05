@@ -13,9 +13,6 @@ from utils.general_utils import check_required_fields
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
 
-# Get SECRET_KEY
-SECRET_KEY = os.environ.get("SECRET_KEY")
-
 
 @reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():

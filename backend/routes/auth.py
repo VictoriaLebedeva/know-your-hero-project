@@ -14,18 +14,11 @@ from errors.api_errors import (
     TokenNotFoundError,
 )
 from utils.general_utils import check_required_fields
-from utils.auth_utils import (
-    verify_token,
-    set_auth_cookies_and_refresh_token
-)
-
+from utils.auth_utils import verify_token, set_auth_cookies_and_refresh_token
 
 
 # Initialize the Flask application
 auth_bp = Blueprint("auth_bp", __name__)
-
-# Get SECRET_KEY
-SECRET_KEY = os.environ.get("SECRET_KEY")
 
 
 @auth_bp.route("/api/auth/register", methods=["POST"])

@@ -5,12 +5,17 @@ from models.models import init_db
 from routes.auth import auth_bp
 from routes.reviews import reviews_bp
 from werkzeug.exceptions import HTTPException
+from config import config_by_name
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
 
+# use config
+app.config.from_object(config_by_name["development"])
+
 # Initialize database
 init_db()
+
 
 # Register blueprint
 app.register_blueprint(auth_bp)
