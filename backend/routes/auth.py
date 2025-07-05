@@ -81,25 +81,25 @@ def login():
             # check if password is correct
             if not user.check_password(data["password"]):
                 raise InvalidCredentialsError()
-            
+
             response = make_response(jsonify({"message": "Login successful"}))
-            
+
             # generate access_token
             response = create_token(
                 response=response,
                 token_name="access_token",
-                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"], 
-                user_info=user
+                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
+                user_info=user,
             )
-            
+
             # generate refresh_token
             response = create_token(
                 response=response,
                 token_name="refresh_token",
-                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"], 
-                user_info=user
+                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
+                user_info=user,
             )
-                  
+
             return response
 
     except (UserNotFoundError, InvalidCredentialsError):
@@ -181,30 +181,30 @@ def refresh():
             user = session.query(User).filter_by(id=user_id).first()
             if not user:
                 raise UserNotFoundError()
-            
+
             # revoke refresh token
             refresh_token_db.is_revoked = True
             session.add(refresh_token_db)
             session.commit()
 
             response = make_response(jsonify({"message": "Token refresh successful"}))
-            
+
             # generate new access_token
             response = create_token(
                 response=response,
                 token_name="access_token",
-                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"], 
-                user_info=user
+                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
+                user_info=user,
             )
-            
+
             # generate new refresh_token
             response = create_token(
                 response=response,
                 token_name="refresh_token",
-                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"], 
-                user_info=user
+                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
+                user_info=user,
             )
-                  
+
             return response
 
     except (TokenRevokedError, TokenNotFoundError, UserNotFoundError):
