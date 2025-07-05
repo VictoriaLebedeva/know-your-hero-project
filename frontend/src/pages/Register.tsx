@@ -39,7 +39,13 @@ const Register: FC = () => {
     try {
       await register(formData.email, formData.password, formData.name);
     } catch (error) {
-      toast.error(`Registration failed: ${(error as Error).message}`);
+      toast.error((error as Error).message);
+      setFormData((prevData) => ({
+        ...prevData,
+        password: "",
+        repeatPassword: "",
+      }));
+
       return;
     }
 
@@ -71,11 +77,12 @@ const Register: FC = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Password" required onChange={handleChange} />
+              <Input id="password" type="password" value={formData.password}
+                placeholder="Password" required onChange={handleChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="repeat-password">Repeat Password</Label>
-              <Input id="repeatPassword" type="password" placeholder="Repeat password" required onChange={handleChange} />
+              <Input id="repeatPassword" type="password"  value={formData.repeatPassword} placeholder="Repeat password" required onChange={handleChange} />
             </div>
             <p className="text-sm text-zinc-500">Already have an account? <Link className="underline" to="/login">Sign In</Link></p>
             <Button type="submit" className="mt-8 w-[85px] h-[40px] bg-primary text-white text-sm rounded-md">

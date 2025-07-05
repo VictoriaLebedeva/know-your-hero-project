@@ -61,7 +61,7 @@ export const register = async (
     body: JSON.stringify({ email, password, name }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message);
+  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };
 
