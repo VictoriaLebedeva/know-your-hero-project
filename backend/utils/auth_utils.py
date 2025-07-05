@@ -5,7 +5,6 @@ from datetime import datetime, timezone, timedelta
 from models.models import RefreshToken
 from errors.api_errors import (
     MissingTokenError,
-    MissingFieldsError,
     ExpiredTokenError,
     InvalidTokenError,
     ServerError,
@@ -49,28 +48,6 @@ def verify_token(request, token_name):
         raise InvalidTokenError(token_name)
     except Exception as e:
         raise ServerError()
-
-
-def check_required_fields(data, required_fields):
-    """Validates the required fields in the request."""
-
-    missing_fields = [
-        field for field in required_fields if field not in data or not data[field]
-    ]
-
-    if missing_fields:
-        raise MissingFieldsError(missing_fields)
-
-
-def validate_credentials(data):
-    """Validates the input data for login or registration."""
-    if not data or not isinstance(data, dict):
-        return "Invalid input. JSON body required."
-    if not data.get("email"):
-        return "Email is required"
-    if not data.get("password"):
-        return "Password is required"
-    return None
 
 
 def set_auth_cookies_and_refresh_token(

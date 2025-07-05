@@ -8,7 +8,7 @@ from errors.api_errors import (
     ReviewTargetNotFoundError,
     DatabaseError,
 )
-from utils.auth_utils import check_required_fields
+from utils.general_utils import check_required_fields
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)

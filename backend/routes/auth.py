@@ -13,11 +13,12 @@ from errors.api_errors import (
     TokenRevokedError,
     TokenNotFoundError,
 )
+from utils.general_utils import check_required_fields
 from utils.auth_utils import (
     verify_token,
-    check_required_fields,
     set_auth_cookies_and_refresh_token
 )
+
 
 
 # Initialize the Flask application
