@@ -91,6 +91,15 @@ class ExpiredTokenError(APIError):
             401,
             ErrorCodes.EXPIRED_TOKEN,
         )
+        
+        
+class TokenNotFoundError(APIError):
+    def __init__(self):
+        super().__init__(
+            f"Unauthorized: Refresh token is not found",
+            401,
+            ErrorCodes.TOKEN_NOT_FOUND,
+        )
 
 
 class TokenRevokedError(APIError):

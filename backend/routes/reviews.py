@@ -27,20 +27,25 @@ def handle_reviews():
         with Session() as session:
             if request.method == "POST":
                 data = request.get_json()
-                
+
                 # check required fields
-                required_fields = ["adresed_id", "author_id"] 
+                required_fields = ["adresed_id", "author_id"]
                 check_required_fields(data, required_fields)
-                
-                # any of positive or negative reviews should be filled 
-                if not ((data.get("positive") or "").strip() or (data.get("negative") or "").strip()):
+
+                # any of positive or negative reviews should be filled
+                if not (
+                    (data.get("positive") or "").strip()
+                    or (data.get("negative") or "").strip()
+                ):
                     raise MissingFieldsError()
 
                 # check if user tries to create reviews about themselves
                 if user_id == data["adresed_id"]:
                     raise SelfReviewNotAllowedError()
-                
-                target_user = session.query(User).filter_by(id=data["adresed_id"]).first()
+
+                target_user = (
+                    session.query(User).filter_by(id=data["adresed_id"]).first()
+                )
                 if not target_user:
                     raise ReviewTargetNotFoundError()
 

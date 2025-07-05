@@ -1,19 +1,20 @@
 import os
-import jwt
 import uuid
 
+import jwt
 from flask import Blueprint, request, jsonify, make_response, current_app
+
 from models.models import Session, User, RefreshToken
 from errors.api_errors import (
     UserNotFoundError,
     EmailExistsError,
-    DatabaseError, 
-    InvalidCredentialsError
+    DatabaseError,
+    InvalidCredentialsError,
+    TokenRevokedError, 
+    TokenNotFoundError
 )
-
 from utils.auth_utils import (
     verify_token,
-    validate_credentials,
     check_required_fields,
     set_auth_cookies_and_refresh_token,
     revoke_refresh_token_by_request,
@@ -40,16 +41,16 @@ def register():
 
     try:
         with Session() as session:
-            # Check if a user with the given email already exists
+            # check if a user with the given email already exists
             if session.query(User).filter_by(email=data["email"]).first():
                 raise EmailExistsError()
 
-            # Create a new user instance
+            # create a new user instance
             new_user = User(
                 id=str(uuid.uuid4()),
                 email=data["email"],
                 name=data["name"],
-                role=data.get("role", "colleague")
+                role=data.get("role", "colleague"),
             )
             new_user.set_password(data["password"])
 
@@ -72,7 +73,7 @@ def login():
     then issues a JWT token as an HTTP-only cookie if successful.
     """
     data = request.get_json()
-    
+
     # check for required fields
     required_fields = ["email", "password"]
     check_required_fields(data, required_fields)
@@ -83,7 +84,7 @@ def login():
             user = session.query(User).filter_by(email=data["email"]).first()
             if not user:
                 raise UserNotFoundError()
-            
+
             # check if password is correct
             if not user.check_password(data["password"]):
                 raise InvalidCredentialsError()
@@ -101,18 +102,24 @@ def login():
         raise DatabaseError("Error processing review data")
 
 
-
 @auth_bp.route("/api/users", methods=["GET"])
 def get_users():
     """Retrieves a list of all users with their id, name, and email."""
 
     verify_token(request, "access_token")
 
-    with Session() as session:
-        users = session.query(User).all()
-        return jsonify(
-            [{"id": user.id, "name": user.name, "email": user.email} for user in users]
-        )
+    try:
+        with Session() as session:
+            users = session.query(User).all()
+            return jsonify(
+                [
+                    {"id": user.id, "name": user.name, "email": user.email}
+                    for user in users
+                ]
+            )
+    except Exception as e:
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing review data")
 
 
 @auth_bp.route("/api/me", methods=["GET"])
@@ -122,21 +129,27 @@ def get_user():
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
-    with Session() as session:
+    try:
+        with Session() as session:
 
-        user = session.query(User).filter_by(id=user_id).first()
-        if not user:
-            raise UserNotFoundError
+            user = session.query(User).filter_by(id=user_id).first()
+            if not user:
+                raise UserNotFoundError()
 
-        return jsonify(
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "role": user.role,
-                "created_at": user.created_at.isoformat(),
-            }
-        )
+            return jsonify(
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "created_at": user.created_at.isoformat(),
+                }
+            )
+    except UserNotFoundError:
+        raise
+    except Exception as e:
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing review data")
 
 
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
@@ -144,31 +157,40 @@ def refresh():
     """Refreshes the authentication token using the refresh token stored in cookies.
     If the refresh token is valid, a new access token and refresh token are issued."""
 
-    refresh_token = request.cookies.get("refresh_token")
-    decoded = jwt.decode(refresh_token, SECRET_KEY, algorithms=["HS256"])
+    token_payload = verify_token(request, "refresh_token")
 
-    jti = decoded.get("jti")
-    user_id = decoded.get("user_id")
+    jti = token_payload.get("jti")
+    user_id = token_payload.get("user_id")
 
     try:
         with Session() as session:
+            
             refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
-            user = session.query(User).filter_by(id=user_id).first()
-
             if not refresh_token_db:
-                return jsonify({"message": f"No such token in a database"}), 401
-            elif not user:
-                return jsonify({"message": f"No such user in a database"}), 401
-            else:
-                response = make_response(jsonify({"message": "Login successful"}))
-                response = set_auth_cookies_and_refresh_token(
-                    response, user, session, old_refresh_token_db=refresh_token_db
-                )
+                raise TokenNotFoundError()
+            if refresh_token_db.is_revoked:
+                raise TokenRevokedError()
+
+            user = session.query(User).filter_by(id=user_id).first()
+            if not user:
+                raise UserNotFoundError()
+
+            response = make_response(jsonify({"message": "Token refresh successful"}))
+            response = set_auth_cookies_and_refresh_token(
+                response, user, session, old_refresh_token_db=refresh_token_db
+            )
 
             return response
 
+    except TokenRevokedError:
+        raise
+    except TokenNotFoundError:
+        raise
+    except UserNotFoundError:
+        raise
     except Exception as e:
-        return jsonify({"message": f"Database error: {str(e)}"}), 500
+        current_app.logger.error(f"Database error: {str(e)}")
+        raise DatabaseError("Error processing token")
 
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
