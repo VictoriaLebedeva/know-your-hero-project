@@ -5,19 +5,20 @@ from datetime import datetime, timezone, timedelta
 
 from flask import current_app
 
-from models.models import RefreshToken
+from models.models import RefreshToken, Session
 from errors.api_errors import (
     MissingTokenError,
     ExpiredTokenError,
     InvalidTokenError,
     ServerError,
+    DatabaseError
 )
 
 
 def generate_jwt(user_id, role, expiry):
     """Generates a JWT token with user ID, role, and expiration date."""
 
-    expiration_date = datetime.now(timezone.utc) + expiry
+    expiration_date = datetime.now(timezone.utc) + timedelta(seconds=expiry)
     jti = str(uuid.uuid4())
 
     new_token = jwt.encode(
@@ -41,9 +42,8 @@ def verify_token(request, token_name):
 
     if token is None:
         raise MissingTokenError(token_name)
-
+    
     try:
-
         decoded = jwt.decode(
             token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
         )
@@ -57,82 +57,43 @@ def verify_token(request, token_name):
         raise ServerError()
 
 
+def create_token(response, token_name, expiry, user_info):
+    
+    expiration_date = datetime.now(timezone.utc) + timedelta(seconds=expiry)
+    jti = str(uuid.uuid4())
 
-def set_auth_cookies_and_refresh_token(
-    response, user, session, old_refresh_token_db=None
-):
-    """Helper to set cookies and create a new refresh token in DB."""
-    access_token, _, _ = generate_jwt(
-        user.id,
-        user.role,
-        timedelta(seconds=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"]),
+    new_token = jwt.encode(
+        {
+            "jti": jti,
+            "user_id": user_info.id,
+            "role": user_info.role,
+            "exp": expiration_date
+        },
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256",
     )
-    refresh_token, jti, expiration_date = generate_jwt(
-        user.id,
-        user.role,
-        timedelta(seconds=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"]),
-    )
-
+    
     response.set_cookie(
-        "access_token",
-        value=access_token,
+        token_name,
+        value=new_token,
         httponly=True,
         secure=False,
         samesite="Lax",
     )
-    
-    response.set_cookie(
-        "refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-    )
-
-    if old_refresh_token_db:
-        revoke_refresh_token(old_refresh_token_db.id, session)
-
-    new_refresh_token = RefreshToken()
-    new_refresh_token.id = jti
-    new_refresh_token.set_token(refresh_token)
-    new_refresh_token.user_id = user.id
-    new_refresh_token.expires_at = expiration_date
-    
-    session.add(new_refresh_token)
-    session.commit()
-    
+       
+    if token_name == "refresh_token":
+        try:
+            with Session() as session:
+                new_refresh_token = RefreshToken(
+                    id=jti, 
+                    user_id=user_info.id,
+                    expires_at = expiration_date
+                )
+                new_refresh_token.set_token(new_token)    
+                session.add(new_refresh_token)
+                session.commit()
+        except Exception as e:
+            current_app.logger.error(f"Database error: {str(e)}")
+            raise DatabaseError("Error processing review data")
+   
     return response
-
-
-def revoke_refresh_token(jti, session):
-    """Revokes the refresh token with the given jti in the database."""
-    refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
-
-    if refresh_token_db:
-        refresh_token_db.is_revoked = True
-        session.add(refresh_token_db)
-        session.commit()
-        return True
-    return False
-
-
-def get_jti_from_refresh_token(request):
-    """Extracts jti from refresh_token in cookies, returns None if invalid or missing."""
-    refresh_token = request.cookies.get("refresh_token")
-    if not refresh_token:
-        return None
-    try:
-        decoded = jwt.decode(
-            refresh_token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-        )
-        return decoded.get("jti")
-    except Exception:
-        return None
-
-
-def revoke_refresh_token_by_request(request, session):
-    """Revokes refresh token from request cookies if possible."""
-    jti = get_jti_from_refresh_token(request)
-    if not jti:
-        return False
-    return revoke_refresh_token(jti, session)
