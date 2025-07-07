@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { login } from "@/lib/api/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +15,7 @@ import { toast } from "sonner"
 const Login: FC = () => {
 
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [formData, setFormData] = useState({
         email: "",
@@ -31,6 +33,8 @@ const Login: FC = () => {
         e.preventDefault();
         try {
             await login(formData.email, formData.password);
+            await queryClient.invalidateQueries({ queryKey: ['user'] });
+            
             toast.success("Login successful!");
             navigate("/reviews");
         } catch (error) {

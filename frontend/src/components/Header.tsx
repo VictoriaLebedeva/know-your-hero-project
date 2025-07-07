@@ -1,5 +1,4 @@
 import type { FC } from "react";
-import { useUser } from "../lib/queries/useUser";
 import { useUserStore } from "../stores/userStore";
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
@@ -14,7 +13,6 @@ import {
 
 const Header: FC = () => {
 
-    useUser();
     const user = useUserStore((s) => s.user);
     const userName = user?.name ?? "Stranger";
 
