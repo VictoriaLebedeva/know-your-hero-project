@@ -43,7 +43,7 @@ export const login = async (email: string, password: string) => {
     body: JSON.stringify({ email, password }),
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message);
+  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };
 
@@ -72,6 +72,6 @@ export const refreshToken = async () => {
     credentials: "include"
   });
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message);
+  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };

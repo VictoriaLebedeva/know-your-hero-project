@@ -5,8 +5,8 @@ export const fetchAllReviews = async () => {
   const res = await fetchWithAuth("/api/reviews");
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to fetch reviews");
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error?.message || 'Unknown error');
   }
 
   const data = await res.json();
@@ -26,8 +26,8 @@ export const createReview = async (reviewData: any) => {
   });
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to create review");
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error?.message || 'Unknown error');
   }
 
   return res.json();
