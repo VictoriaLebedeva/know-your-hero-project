@@ -34,7 +34,7 @@ export const fetchAllColleagues = async () => {
 
 // log in to the system
 export const login = async (email: string, password: string) => {
-  const response = await fetch("/api/auth/login", {
+  const res = await fetch("/api/auth/login", {
     method: "POST",
     credentials: "include",
     headers: {
@@ -42,8 +42,8 @@ export const login = async (email: string, password: string) => {
     },
     body: JSON.stringify({ email, password }),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };
 
@@ -53,25 +53,36 @@ export const register = async (
   password: string,
   name: string
 ) => {
-  const response = await fetch("/api/auth/register", {
+  const res = await fetch("/api/auth/register", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password, name }),
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };
 
-// requiest refresh_token
+// request refresh_token
 export const refreshToken = async () => {
-  const response = await fetch("/api/auth/refresh", {
+  const res = await fetch("/api/auth/refresh", {
     method: "POST",
     credentials: "include"
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error?.message || 'Unknown error');
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Unknown error');
   return data;
 };
+
+// request refresh_token
+export const logout = async () => {
+  const res = await fetchWithAuth("/api/auth/logout", {
+    method: "POST",
+    credentials: "include"
+  });
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error?.message || 'Unknown error');
+  return data;
+}; 

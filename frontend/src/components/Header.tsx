@@ -2,6 +2,8 @@ import type { FC } from "react";
 import { useUserStore } from "../stores/userStore";
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
+import { logout } from "@/lib/api/auth"
+
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import {
@@ -21,12 +23,7 @@ const Header: FC = () => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch("/api/auth/logout", {
-                method: "POST",
-                credentials: "include"
-            });
-            const data = await response.json()
-            if (!response.ok) throw new Error(data.message);
+            await logout();
             toast.success("Logout successful!");
             navigate("/");
         } catch (error) {

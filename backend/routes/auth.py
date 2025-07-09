@@ -113,11 +113,13 @@ def login():
 def get_users():
     """Retrieves a list of all users with their id, name, and email."""
 
-    verify_token(request, "access_token")
+    token_payload = verify_token(request, "access_token")
+    user_id = token_payload.get("user_id")
 
     try:
         with Session() as session:
-            users = session.query(User).all()
+            users = session.query(User).filter(User.id != user_id)
+
             return jsonify(
                 [
                     {"id": user.id, "name": user.name, "email": user.email}
