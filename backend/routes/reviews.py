@@ -26,7 +26,7 @@ def handle_reviews():
                 data = request.get_json()
 
                 # check required fields
-                required_fields = ["adresed_id", "author_id"]
+                required_fields = ["adresed_id"]
                 check_required_fields(data, required_fields)
 
                 # any of positive or negative reviews should be filled
@@ -49,8 +49,8 @@ def handle_reviews():
                 new_review = Review(
                     positive=data["positive"],
                     negative=data["negative"],
-                    adresed_id=data["adresed_id"],
-                    author_id=data["author_id"],
+                    adresed_id=target_user.id,
+                    author_id=user_id
                 )
                 session.add(new_review)
                 session.commit()
