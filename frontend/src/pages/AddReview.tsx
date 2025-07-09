@@ -1,7 +1,6 @@
 import type { FC, ChangeEvent, FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useUserStore } from "../stores/userStore";
-import { useColleagues } from "../lib/queries/useColleagues";
 import { useColleagueStore } from "../stores/colleagueStore";
 import { createReview } from "@/lib/api/reviews";
 
@@ -37,7 +36,6 @@ const initialFormData = {
 
 const AddReview: FC = () => {
 
-    useColleagues();
     const colleagues = useColleagueStore((s) => s.colleagues);
     const user = useUserStore((s) => s.user);
     

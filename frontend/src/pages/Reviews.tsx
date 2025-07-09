@@ -1,8 +1,9 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import type { ReviewType } from "../types/review"
+import type { ReviewType } from "@/types/review"
 import { fetchAllReviews } from "@/lib/api/reviews";
-import { useUser } from "../lib/queries/useUser";
+import { useUser } from "@/lib/queries/useUser";
+import { useColleagues } from "@/lib/queries/useColleagues";
 
 import { Link } from "react-router-dom";
 
@@ -21,10 +22,11 @@ import {
 
 const Reviews: FC = () => {
 
+    //load information about users
     useUser();
+    useColleagues();
 
     const [reviews, setReviews] = useState<ReviewType[]>([]);
-
     useEffect(() => {
         fetchAllReviews().then(setReviews).catch(console.error);
     }, []);
