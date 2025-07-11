@@ -57,7 +57,7 @@ def handle_reviews():
                 return jsonify({"message": "Review created successfully"}), 201
 
             # GET
-            reviews = session.query(Review).all()
+            reviews = session.query(Review).order_by(Review.created_at.desc()).all()
             reviews_data = [
                 {
                     "id": review.id,

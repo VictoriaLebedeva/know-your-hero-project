@@ -22,7 +22,7 @@ import {
 
 const Reviews: FC = () => {
 
-    //load information about users
+    //load information about users and collegues
     useUser();
     useColleagues();
 
@@ -43,8 +43,9 @@ const Reviews: FC = () => {
                         <TableRow>
                             <TableHead>Hero</TableHead>
                             <TableHead>Author</TableHead>
-                            <TableHead>Positive</TableHead>
-                            <TableHead>Negative</TableHead>
+                            <TableHead className="text-[#48973E]">Positive</TableHead>
+                            <TableHead className="text-[#973E42]">Negative</TableHead>
+                            <TableHead>Created At</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -52,8 +53,20 @@ const Reviews: FC = () => {
                             <TableRow key={review.id}>
                                 <TableCell className="font-medium">{review.adresed_name}</TableCell>
                                 <TableCell className="font-medium">{review.author_name}</TableCell>
-                                <TableCell>{review.positive}</TableCell>
-                                <TableCell>{review.negative}</TableCell>
+                                <TableCell className="w-[400px] break-words whitespace-normal">{review.positive}</TableCell>
+                                <TableCell className="w-[400px] break-words whitespace-normal">{review.negative}</TableCell>
+                                <TableCell>
+                                    {new Date(review.created_at).toLocaleString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        second: "2-digit",
+                                        hour12: false
+                                    })}
+                                </TableCell>
+
                             </TableRow>
                         ))}
                     </TableBody>
