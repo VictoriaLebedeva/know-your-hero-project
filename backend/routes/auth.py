@@ -93,6 +93,8 @@ def login():
             )
 
             # generate refresh_token
+            print("Refresh token expiry in seconds:", current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"])
+
             response = create_token(
                 response=response,
                 token_name="refresh_token",
@@ -198,7 +200,9 @@ def refresh():
                 expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
                 user_info=user,
             )
-
+            
+            current_app.logger.error(f"Config: {current_app.config['REFRESH_TOKEN_EXPIRES_SECONDS']}")
+            
             # generate new refresh_token
             response = create_token(
                 response=response,

@@ -16,10 +16,10 @@ class Config:
     DEBUG = False
 
     ACCESS_TOKEN_EXPIRES_SECONDS = int(
-        os.environ.get("ACCESS_TOKEN_EXPIRES_SECONDS", 3600)
+        os.environ.get("ACCESS_TOKEN_EXPIRES_SECONDS", 60)
     )  # 1 hour
     REFRESH_TOKEN_EXPIRES_SECONDS = int(
-        os.environ.get("REFRESH_TOKEN_EXPIRES_SECONDS", 2592000)
+        os.environ.get("REFRESH_TOKEN_EXPIRES_SECONDS", 300)
     )  # 30 days
 
 

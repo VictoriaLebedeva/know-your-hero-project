@@ -67,12 +67,18 @@ const AddReview: FC = () => {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
+            toast.error("Review is too long (more than 1000 charachters). Please, be brief :)");
+            return;
+        }
+
         if (!formData.positive?.trim() && !formData.negative?.trim()) {
-            toast.error("Please fill in at least one of 'positive' or 'negative' fields.");
+            toast.error("Please fill in at least one of 'positive' or 'negative' fields");
             return;
         }
 
         const dataToSubmit = { ...formData, author_id: user?.id ?? null };
+        
 
         try {
             await createReview(dataToSubmit);
