@@ -14,7 +14,7 @@ from errors.api_errors import (
     TokenNotFoundError,
 )
 from utils.general_utils import check_required_fields
-from utils.auth_utils import verify_token, create_token
+from utils.auth_utils import verify_token, create_token,revoke_refresh_token
 
 
 # Initialize the Flask application
@@ -81,19 +81,23 @@ def login():
             # check if password is correct
             if not user.check_password(data["password"]):
                 raise InvalidCredentialsError()
-
+            
+            # revoke all existing refresh tokens before generating a new one
+            user_refresh_tokens = session.query(RefreshToken).filter(RefreshToken.user_id == user.id)
+            with Session() as session:
+                for token in user_refresh_tokens:
+                    if token.is_revoked == False:
+                        revoke_refresh_token(token.id, session)       
+            
+            # create new access and refresh tokens
             response = make_response(jsonify({"message": "Login successful"}))
 
-            # generate access_token
             response = create_token(
                 response=response,
                 token_name="access_token",
                 expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
                 user_info=user,
             )
-
-            # generate refresh_token
-            print("Refresh token expiry in seconds:", current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"])
 
             response = create_token(
                 response=response,
@@ -175,21 +179,12 @@ def refresh():
 
     try:
         with Session() as session:
-
-            refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
-            if not refresh_token_db:
-                raise TokenNotFoundError()
-            if refresh_token_db.is_revoked:
-                raise TokenRevokedError()
-
+            
             user = session.query(User).filter_by(id=user_id).first()
             if not user:
                 raise UserNotFoundError()
 
-            # revoke refresh token
-            refresh_token_db.is_revoked = True
-            session.add(refresh_token_db)
-            session.commit()
+            revoke_refresh_token(jti, session)
 
             response = make_response(jsonify({"message": "Token refresh successful"}))
 
@@ -230,16 +225,7 @@ def logout():
 
     try:
         with Session() as session:
-
-            refresh_token_db = session.query(RefreshToken).filter_by(id=jti).first()
-            if not refresh_token_db:
-                raise TokenNotFoundError()
-            if refresh_token_db.is_revoked:
-                raise TokenRevokedError()
-
-            refresh_token_db.is_revoked = True
-            session.add(refresh_token_db)
-            session.commit()
+            revoke_refresh_token(jti, session)
 
     except (TokenNotFoundError, TokenRevokedError) as e:
         current_app.logger.error(f"Refresh Token Error: {str(e)}")

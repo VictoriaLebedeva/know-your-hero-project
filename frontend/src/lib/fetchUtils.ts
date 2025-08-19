@@ -1,4 +1,5 @@
 import { refreshToken } from '@/lib/api/auth';
+import { toast } from 'sonner';
 
 let isRefreshing = false;
 
@@ -35,8 +36,11 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}): Pro
             } catch (error) {
                 console.error("Session expired. Could not refresh token.", error);
                 processQueue(error as Error);
+
+                sessionStorage.setItem('flash:sessionExpired', '1');
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+
                 window.location.href = '/login'; // hard redirect to login page
-            
                 throw error;
 
             } finally {

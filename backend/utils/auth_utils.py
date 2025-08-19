@@ -1,6 +1,5 @@
 import jwt
 import uuid
-import os
 from datetime import datetime, timezone, timedelta
 
 from flask import current_app
@@ -12,6 +11,8 @@ from errors.api_errors import (
     InvalidTokenError,
     ServerError,
     DatabaseError,
+    TokenNotFoundError, 
+    TokenRevokedError
 )
 
 
@@ -90,3 +91,15 @@ def create_token(response, token_name, expiry, user_info):
             raise DatabaseError("Error processing review data")
 
     return response
+
+def revoke_refresh_token(jti, session):
+    token = session.query(RefreshToken).filter_by(id=jti).first()
+
+    if not token:
+        raise TokenNotFoundError("Token not found")
+    if token.is_revoked:
+        raise TokenRevokedError("Token already revoked")
+
+    token.is_revoked = True
+    session.add(token)
+    session.commit()

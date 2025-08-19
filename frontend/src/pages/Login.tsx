@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { login } from "@/lib/api/auth";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,6 +16,19 @@ const Login: FC = () => {
 
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
+    useEffect(() => {
+        const fromFlash = sessionStorage.getItem('flash:sessionExpired') === '1';
+
+        if (fromFlash) {
+            sessionStorage.removeItem('flash:sessionExpired');
+            toast.error('Session expired', {
+                id: 'session-expired',
+                duration: 4000,
+            });
+        }
+    }, [location, navigate]);
+
 
     const [formData, setFormData] = useState({
         email: "",
@@ -34,7 +47,7 @@ const Login: FC = () => {
         try {
             await login(formData.email, formData.password);
             await queryClient.invalidateQueries({ queryKey: ['user'] });
-            
+
             toast.success("Login successful!");
             navigate("/reviews");
         } catch (error) {

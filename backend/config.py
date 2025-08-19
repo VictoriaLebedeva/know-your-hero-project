@@ -27,7 +27,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
     ACCESS_TOKEN_EXPIRES_SECONDS = 300  # 5 minutes
-    REFRESH_TOKEN_EXPIRES_SECONDS = 86400  # 1 day
+    REFRESH_TOKEN_EXPIRES_SECONDS = 300  # 1 day
 
 
 class ProductionConfig(Config):
