@@ -6,6 +6,7 @@ class ErrorCodes:
     EMAIL_EXISTS = 1010
     ACCOUNT_LOCKED = 1011
     USER_NOT_FOUND = 1013
+    INVALID_EMAIL_FORMAT = 1014
 
     # Token errors (1020-1039)
     MISSING_TOKEN = 1020

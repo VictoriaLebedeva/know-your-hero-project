@@ -1,5 +1,5 @@
 import os
-from utils.auth_utils import verify_token
+
 from flask import Blueprint, current_app, request, jsonify
 from models.models import Session, Review, User
 from errors.api_errors import (
@@ -9,6 +9,7 @@ from errors.api_errors import (
     DatabaseError,
 )
 from utils.general_utils import check_required_fields
+from utils.auth_utils import verify_token
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
@@ -50,7 +51,7 @@ def handle_reviews():
                     positive=data["positive"],
                     negative=data["negative"],
                     adresed_id=target_user.id,
-                    author_id=user_id
+                    author_id=user_id,
                 )
                 session.add(new_review)
                 session.commit()

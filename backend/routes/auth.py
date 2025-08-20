@@ -1,7 +1,5 @@
-import os
 import uuid
 
-import jwt
 from flask import Blueprint, request, jsonify, make_response, current_app
 
 from models.models import Session, User, RefreshToken
@@ -14,7 +12,12 @@ from errors.api_errors import (
     TokenNotFoundError,
 )
 from utils.general_utils import check_required_fields
-from utils.auth_utils import verify_token, create_token,revoke_refresh_token
+from utils.auth_utils import (
+    verify_token,
+    create_token,
+    revoke_refresh_token,
+    validate_email_format
+)
 
 
 # Initialize the Flask application
@@ -31,6 +34,7 @@ def register():
 
     required_fields = ["email", "name", "password"]
     check_required_fields(data, required_fields)
+    validate_email_format(data["email"])
 
     try:
         with Session() as session:
@@ -70,6 +74,7 @@ def login():
     # check for required fields
     required_fields = ["email", "password"]
     check_required_fields(data, required_fields)
+    validate_email_format(data["email"])
 
     try:
         with Session() as session:
@@ -81,14 +86,16 @@ def login():
             # check if password is correct
             if not user.check_password(data["password"]):
                 raise InvalidCredentialsError()
-            
+
             # revoke all existing refresh tokens before generating a new one
-            user_refresh_tokens = session.query(RefreshToken).filter(RefreshToken.user_id == user.id)
+            user_refresh_tokens = session.query(RefreshToken).filter(
+                RefreshToken.user_id == user.id
+            )
             with Session() as session:
                 for token in user_refresh_tokens:
                     if token.is_revoked == False:
-                        revoke_refresh_token(token.id, session)       
-            
+                        revoke_refresh_token(token.id, session)
+
             # create new access and refresh tokens
             response = make_response(jsonify({"message": "Login successful"}))
 
@@ -179,7 +186,7 @@ def refresh():
 
     try:
         with Session() as session:
-            
+
             user = session.query(User).filter_by(id=user_id).first()
             if not user:
                 raise UserNotFoundError()
@@ -195,9 +202,11 @@ def refresh():
                 expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
                 user_info=user,
             )
-            
-            current_app.logger.error(f"Config: {current_app.config['REFRESH_TOKEN_EXPIRES_SECONDS']}")
-            
+
+            current_app.logger.error(
+                f"Config: {current_app.config['REFRESH_TOKEN_EXPIRES_SECONDS']}"
+            )
+
             # generate new refresh_token
             response = create_token(
                 response=response,

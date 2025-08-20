@@ -1,5 +1,6 @@
 import jwt
 import uuid
+import re
 from datetime import datetime, timezone, timedelta
 
 from flask import current_app
@@ -11,8 +12,9 @@ from errors.api_errors import (
     InvalidTokenError,
     ServerError,
     DatabaseError,
-    TokenNotFoundError, 
-    TokenRevokedError
+    TokenNotFoundError,
+    TokenRevokedError,
+    InvalidEmailFormat
 )
 
 
@@ -54,7 +56,7 @@ def verify_token(request, token_name):
 
 
 def create_token(response, token_name, expiry, user_info):
-
+    """Creates a JWT token and sets it in the response cookie."""
     expiration_date = datetime.now(timezone.utc) + timedelta(seconds=expiry)
     jti = str(uuid.uuid4())
 
@@ -92,7 +94,9 @@ def create_token(response, token_name, expiry, user_info):
 
     return response
 
+
 def revoke_refresh_token(jti, session):
+    """Revokes a refresh token by marking it as revoked in the database."""
     token = session.query(RefreshToken).filter_by(id=jti).first()
 
     if not token:
@@ -103,3 +107,12 @@ def revoke_refresh_token(jti, session):
     token.is_revoked = True
     session.add(token)
     session.commit()
+
+def validate_email_format(email):
+    """Validates the format of an email address."""    
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    try:
+        if not bool(re.match(pattern, email)):
+            raise InvalidEmailFormat()
+    except InvalidEmailFormat:
+        raise

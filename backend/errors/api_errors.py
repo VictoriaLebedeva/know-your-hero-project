@@ -65,6 +65,11 @@ class UserNotFoundError(APIError):
         super().__init__("User profile not found", 404, ErrorCodes.USER_NOT_FOUND)
 
 
+class InvalidEmailFormat(APIError):
+    def __init__(self):
+        super().__init__("Invalid email format", 400, ErrorCodes.INVALID_EMAIL_FORMAT)
+
+
 # Token errors
 class MissingTokenError(APIError):
     def __init__(self, token):
@@ -78,8 +83,8 @@ class MissingTokenError(APIError):
 class InvalidTokenError(APIError):
     def __init__(self, token):
         super().__init__(
-            f"Unauthorized: Invalid authentication {token}",
-            401,
+            f"Invalid format of {token}",
+            400,
             ErrorCodes.INVALID_TOKEN,
         )
 
