@@ -5,16 +5,16 @@ from datetime import datetime, timezone, timedelta
 
 from flask import current_app
 
-from models.models import RefreshToken, Session
+from models.models import RefreshToken, User, Session
 from errors.api_errors import (
     MissingTokenError,
     ExpiredTokenError,
     InvalidTokenError,
-    ServerError,
     DatabaseError,
     TokenNotFoundError,
     TokenRevokedError,
-    InvalidEmailFormat
+    InvalidEmailFormat,
+    TokenUserNotFoundError
 )
 
 
@@ -45,7 +45,16 @@ def verify_token(request, token_name):
         decoded = jwt.decode(
             token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
         )
-        return decoded
+        
+        user_id = decoded.get("user_id")
+    
+        with Session() as session:
+            # check if email exists in database
+            user = session.query(User).filter_by(id=user_id).first()
+            if not user:
+                raise TokenUserNotFoundError()
+            
+            return decoded
 
     except jwt.ExpiredSignatureError:
         raise ExpiredTokenError(token_name)

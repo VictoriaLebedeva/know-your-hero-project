@@ -121,6 +121,13 @@ class TokenValidationError(APIError):
         super().__init__(
             f"Invalid {token} format", 400, ErrorCodes.TOKEN_ALREADY_REVOKED
         )
+    
+        
+class TokenUserNotFoundError(APIError):
+    def __init__(self):
+        super().__init__(
+            "User assosiated with token no longer exists", 401, ErrorCodes.TOKEN_ALREADY_REVOKED
+        )
 
 
 # Permission errors
@@ -149,6 +156,15 @@ class SelfReviewNotAllowedError(APIError):
             f"You cannot submit a review for yourself",
             400,
             ErrorCodes.SELF_REVIEW_NOT_ALLOWED,
+        )
+        
+
+class MaxLimitExceededError(APIError):
+    def __init__(self, limit):
+        super().__init__(
+            f"Character limit exceeded: maximum is {limit}",
+            400,
+            ErrorCodes.MAX_LIMIT_EXCEEDED,
         )
 
 

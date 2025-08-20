@@ -7,6 +7,7 @@ from errors.api_errors import (
     MissingFieldsError,
     ReviewTargetNotFoundError,
     DatabaseError,
+    MaxLimitExceededError
 )
 from utils.general_utils import check_required_fields
 from utils.auth_utils import verify_token
@@ -33,10 +34,14 @@ def handle_reviews():
 
                 # any of positive or negative reviews should be filled
                 if not (
-                    (data.get("positive") or "").strip()
-                    or (data.get("negative") or "").strip()
+                    (data["positive"] or "").strip()
+                    or (data["negative"] or "").strip()
                 ):
                     raise MissingFieldsError()
+                
+                # check for character limit exceed 
+                if len(data["positive"]) > 1000 or len(data["negative"]) > 1000:
+                    raise MaxLimitExceededError(1000)
 
                 # check if user tries to create reviews about themselves
                 if user_id == data["adresed_id"]:
@@ -76,7 +81,7 @@ def handle_reviews():
             ]
             return jsonify(reviews_data), 200
 
-    except (MissingFieldsError, SelfReviewNotAllowedError, ReviewTargetNotFoundError):
+    except (MissingFieldsError, SelfReviewNotAllowedError, ReviewTargetNotFoundError, MaxLimitExceededError):
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
