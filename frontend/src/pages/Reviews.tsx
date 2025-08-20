@@ -34,43 +34,54 @@ const Reviews: FC = () => {
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
             <Header />
-            <main className="flex-grow flex flex-col items-start mt-8 space-y-[25px]">
+            <main className="flex flex-grow flex-col items-start mt-8 space-y-[25px]">
                 <Link to="/reviews/new">
                     <Button>+ Add Review</Button>
                 </Link>
-                <Table className="w-full text-left">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Hero</TableHead>
-                            <TableHead>Author</TableHead>
-                            <TableHead className="text-[#48973E]">Positive</TableHead>
-                            <TableHead className="text-[#973E42]">Negative</TableHead>
-                            <TableHead>Created At</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {reviews.map((review) => (
-                            <TableRow key={review.id}>
-                                <TableCell className="font-medium">{review.adresed_name}</TableCell>
-                                <TableCell className="font-medium">{review.author_name}</TableCell>
-                                <TableCell className="w-[400px] break-words whitespace-normal">{review.positive}</TableCell>
-                                <TableCell className="w-[400px] break-words whitespace-normal">{review.negative}</TableCell>
-                                <TableCell>
-                                    {new Date(review.created_at).toLocaleString("en-US", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        second: "2-digit",
-                                        hour12: false
-                                    })}
-                                </TableCell>
-
+                {reviews.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center text-gray-500 w-full flex-1">
+                        <img
+                            src="\no-data.svg"
+                            alt="No reviews"
+                            className="w-16 h-16 mb-4 text-gray-500"
+                        />
+                        <p className="text-gray-600 text-m font-semibold">No reviews</p>
+                    </div>
+                ) : (
+                    <Table className="w-full text-left">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Hero</TableHead>
+                                <TableHead>Author</TableHead>
+                                <TableHead className="text-[#48973E]">Positive</TableHead>
+                                <TableHead className="text-[#973E42]">Negative</TableHead>
+                                <TableHead>Created At</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {reviews.map((review) => (
+                                <TableRow key={review.id}>
+                                    <TableCell className="font-medium">{review.adresed_name}</TableCell>
+                                    <TableCell className="font-medium">{review.author_name}</TableCell>
+                                    <TableCell className="w-[400px] break-words whitespace-normal">{review.positive}</TableCell>
+                                    <TableCell className="w-[400px] break-words whitespace-normal">{review.negative}</TableCell>
+                                    <TableCell>
+                                        {new Date(review.created_at).toLocaleString("en-US", {
+                                            year: "numeric",
+                                            month: "long",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            second: "2-digit",
+                                            hour12: false
+                                        })}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                )}
+
             </main>
             <Footer />
         </div>
