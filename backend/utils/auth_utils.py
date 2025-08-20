@@ -51,8 +51,6 @@ def verify_token(request, token_name):
         raise ExpiredTokenError(token_name)
     except jwt.InvalidTokenError:
         raise InvalidTokenError(token_name)
-    except Exception as e:
-        raise ServerError()
 
 
 def create_token(response, token_name, expiry, user_info):
@@ -100,13 +98,14 @@ def revoke_refresh_token(jti, session):
     token = session.query(RefreshToken).filter_by(id=jti).first()
 
     if not token:
-        raise TokenNotFoundError("Token not found")
+        raise TokenNotFoundError
     if token.is_revoked:
-        raise TokenRevokedError("Token already revoked")
+        raise TokenRevokedError
 
     token.is_revoked = True
     session.add(token)
     session.commit()
+
 
 def validate_email_format(email):
     """Validates the format of an email address."""    

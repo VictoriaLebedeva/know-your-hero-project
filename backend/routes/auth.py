@@ -219,8 +219,11 @@ def refresh():
 
     except (TokenRevokedError, TokenNotFoundError, UserNotFoundError):
         raise
+    # except TokenRevokedError:
+    #     current_app.logger.error(f"A try to refresh with revoked token: {str(e)}")
     except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
+        current_app.logger.error(f"Unexpected error: {type(e).__name__}: {str(e)}")
+        # current_app.logger.error(f"Database error: {str(e)}")
         raise DatabaseError("Error processing token")
 
 
@@ -238,6 +241,7 @@ def logout():
 
     except (TokenNotFoundError, TokenRevokedError) as e:
         current_app.logger.error(f"Refresh Token Error: {str(e)}")
+        raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
         raise DatabaseError("Error processing token")

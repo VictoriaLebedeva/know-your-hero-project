@@ -164,6 +164,7 @@ class ServerError(APIError):
 class DatabaseError(APIError):
     def __init__(self, detail=None):
         message = "Error retrieving/saving data. Please try again later"
+        
         if detail:
             message = f"Database error: {detail}"
         super().__init__(message, 500, ErrorCodes.DATABASE_ERROR)
