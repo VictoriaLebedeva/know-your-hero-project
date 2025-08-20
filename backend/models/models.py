@@ -54,7 +54,7 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_token"
 
-    id = Column(String(512), primary_key=True)
+    id = Column(String(36), primary_key=True)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     token_hash = Column(String(512), nullable=False)
     expires_at = Column(DateTime, nullable=False)
@@ -77,7 +77,7 @@ class Review(Base):
 
     __tablename__ = "reviews"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(String(36), primary_key=True)
     positive = Column(String(1000))
     negative = Column(String(1000))
     adresed_id = Column(

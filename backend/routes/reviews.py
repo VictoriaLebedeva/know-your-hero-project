@@ -1,4 +1,4 @@
-import os
+import uuid
 
 from flask import Blueprint, current_app, request, jsonify
 from models.models import Session, Review, User
@@ -18,6 +18,7 @@ reviews_bp = Blueprint("reviews_bp", __name__)
 @reviews_bp.route("/api/reviews", methods=["GET", "POST"])
 def handle_reviews():
     """Handles creating and retrieving reviews."""
+    
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
@@ -48,6 +49,7 @@ def handle_reviews():
                     raise ReviewTargetNotFoundError()
 
                 new_review = Review(
+                    id=str(uuid.uuid4()),
                     positive=data["positive"],
                     negative=data["negative"],
                     adresed_id=target_user.id,
