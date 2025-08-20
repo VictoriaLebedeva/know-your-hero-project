@@ -38,7 +38,7 @@ const AddReview: FC = () => {
 
     const colleagues = useColleagueStore((s) => s.colleagues);
     const user = useUserStore((s) => s.user);
-    
+
 
     const [formData, setFormData] = useState<FormData>(initialFormData)
 
@@ -66,19 +66,25 @@ const AddReview: FC = () => {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
-            toast.error("Review is too long (more than 1000 charachters). Please, be brief :)");
+       
+        if (!formData.adresed_id) {
+            toast.error("Please select a colleague before submitting");
             return;
         }
+
 
         if (!formData.positive?.trim() && !formData.negative?.trim()) {
             toast.error("Please fill in at least one of 'positive' or 'negative' fields");
             return;
         }
 
+        if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
+            toast.error("Review is too long (more than 1000 charachters). Please, be brief :)");
+            return;
+        }
+
         const dataToSubmit = { ...formData, author_id: user?.id ?? null };
-        
+
 
         try {
             await createReview(dataToSubmit);
@@ -94,16 +100,16 @@ const AddReview: FC = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
+        <div className="flex flex-col min-h-screen px-4 sm:px-8 lg:px-[75px] pt-6 sm:pt-[55px] pb-6 sm:pb-[35px] bg-white">
             <Header />
-            <main className="flex-grow flex flex-col items-center mt-12">
-                <form onSubmit={(e) => handleSubmit(e)} className="form-container">
-                    <div className="flex flex-row gap-[70px]">
-                        <div className="w-lg">
-                            <p className="text-xl font-semibold">Step 1</p>
-                            <p className="text-xl">Choose colleague</p>
+            <main className="flex-grow flex flex-col items-center mt-8 sm:mt-12">
+                <form onSubmit={handleSubmit} className="w-full max-w-6xl">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <div className="w-full">
+                            <p className="text-lg sm:text-xl font-semibold">Step 1</p>
+                            <p className="text-base sm:text-xl">Choose colleague</p>
                             <Select value={formData.adresed_id?.toString() ?? ""} onValueChange={handleColleagueChange}>
-                                <SelectTrigger className="w-full mt-8">
+                                <SelectTrigger className="w-full mt-6 sm:mt-8">
                                     <SelectValue placeholder="Select an option" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -117,28 +123,45 @@ const AddReview: FC = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="w-lg">
-                            <p className="text-xl font-semibold">Step 2</p>
-                            <p className="text-xl">Write what you think</p>
-                            <div className="flex flex-col gap-[10px] mt-8">
-                                <p className="inline-flex w-[200px] justify-center bg-[#48973E] text-white text-sm font-medium rounded px-4 py-1">
+
+                        <div className="w-full">
+                            <p className="text-lg sm:text-xl font-semibold">Step 2</p>
+                            <p className="text-base sm:text-xl">Write what you think</p>
+
+                            <div className="flex flex-col gap-2 mt-6 sm:mt-8">
+                                <p className="inline-flex justify-center bg-[#48973E] text-white text-sm font-medium rounded px-4 py-1 w-fit">
                                     Such a nice person
                                 </p>
-                                <Textarea id="positive" value={formData.positive} onChange={handleChange} placeholder="What is good about collegue?" />
+                                <Textarea
+                                    id="positive"
+                                    value={formData.positive}
+                                    onChange={handleChange}
+                                    placeholder="What is good about colleague?"
+                                    className="min-h-[120px] resize-none"
+                                />
                             </div>
-                            <div className="flex flex-col gap-[10px] mt-8">
-                                <p className="inline-flex w-[200px] justify-center bg-[#973E42] text-white text-sm font-medium rounded px-4 py-1">
+
+                            <div className="flex flex-col gap-2 mt-6 sm:mt-8">
+                                <p className="inline-flex justify-center bg-[#973E42] text-white text-sm font-medium rounded px-4 py-1 w-fit">
                                     But
                                 </p>
-                                <Textarea id="negative" value={formData.negative} onChange={handleChange} placeholder="Any gossips?" />
+                                <Textarea
+                                    id="negative"
+                                    value={formData.negative}
+                                    onChange={handleChange}
+                                    placeholder="Any gossips?"
+                                    className="min-h-[120px] resize-none"
+                                />
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-row justify-end gap-[10px] mt-10">
-                        <Link to="/reviews">
-                            <Button type="button" variant="outline">Cancel</Button>
+
+                    {/* Buttons */}
+                    <div className="flex flex-wrap justify-end gap-4 mt-10">
+                        <Link to="/reviews" className="w-full sm:w-auto">
+                            <Button type="button" variant="outline" className="w-full sm:w-auto">Cancel</Button>
                         </Link>
-                        <Button type="submit">Submit</Button>
+                        <Button type="submit" className="w-full sm:w-auto">Submit</Button>
                     </div>
                 </form>
             </main>
