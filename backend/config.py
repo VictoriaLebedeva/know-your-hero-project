@@ -16,10 +16,10 @@ class Config:
     DEBUG = False
 
     ACCESS_TOKEN_EXPIRES_SECONDS = int(
-        os.environ.get("ACCESS_TOKEN_EXPIRES_SECONDS", 60)
+        os.environ.get("ACCESS_TOKEN_EXPIRES_SECONDS", 3600)
     )  # 1 hour
     REFRESH_TOKEN_EXPIRES_SECONDS = int(
-        os.environ.get("REFRESH_TOKEN_EXPIRES_SECONDS", 300)
+        os.environ.get("REFRESH_TOKEN_EXPIRES_SECONDS", 2592000)
     )  # 30 days
 
 
@@ -27,7 +27,7 @@ class DevelopmentConfig(Config):
     DEBUG = True
 
     ACCESS_TOKEN_EXPIRES_SECONDS = 300  # 5 minutes
-    REFRESH_TOKEN_EXPIRES_SECONDS = 300  # 1 day
+    REFRESH_TOKEN_EXPIRES_SECONDS = 86400  # 1 day
 
 
 class ProductionConfig(Config):
