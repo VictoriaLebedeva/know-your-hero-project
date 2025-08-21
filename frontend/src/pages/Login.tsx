@@ -51,7 +51,25 @@ const Login: FC = () => {
             toast.success("Login successful!");
             navigate("/reviews");
         } catch (error) {
-            toast.error(`Login failed: ${(error as Error).message}`);
+            const err = error as any;
+
+            if (err.response?.data?.error?.code === 1011) {
+                const lockTime = err.response.data.error.time;
+
+                const lockDate = new Date(lockTime);
+                const localTime = lockDate.toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false
+                });
+                toast.error(`Your account is blocked until ${localTime}`);
+            } else {
+                toast.error(`Login failed: ${(error as Error).message}`);
+            }
         }
     };
 

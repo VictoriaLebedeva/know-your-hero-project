@@ -43,7 +43,15 @@ export const login = async (email: string, password: string) => {
     body: JSON.stringify({ email, password }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message || 'Unknown error');
+    if (!res.ok) {
+    const error = new Error(data.error?.message || 'Unknown error');
+    (error as any).response = {
+      data: data,
+      status: res.status,
+      statusText: res.statusText
+    };
+    throw error;
+  }
   return data;
 };
 
