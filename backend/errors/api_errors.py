@@ -50,15 +50,26 @@ class EmailExistsError(APIError):
             "User with this email already exists", 409, ErrorCodes.EMAIL_EXISTS
         )
 
-
 class AccountLockError(APIError):
-    def __init__(self):
+    def __init__(self, time):
+        self.time = time
         super().__init__(
-            "Your account has been locked. Please contact support",
-            403,
+            f"Your account is locked until {time}",
+            423,
             ErrorCodes.ACCOUNT_LOCKED,
         )
 
+    def to_response(self):
+        return (
+            jsonify({
+                "error": {
+                    "code": self.error_code,
+                    "message": self.message,
+                    "time": str(self.time),
+                }
+            }),
+            self.status_code,
+        )
 
 class UserNotFoundError(APIError):
     def __init__(self):

@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone, timedelta
 
 from flask import current_app
+from sqlalchemy import select, func
 
 from models.models import RefreshToken, User, Session
 from errors.api_errors import (
@@ -124,3 +125,12 @@ def validate_email_format(email):
             raise InvalidEmailFormat()
     except InvalidEmailFormat:
         raise
+
+def check_user_locked(session, user):
+    if not user.lock_login_until:
+        return None
+
+    db_now = session.execute(select(func.now())).scalar_one() # get DB time
+    if user.lock_login_until > db_now:
+        return int((user.lock_login_until - db_now).total_seconds())
+    return None

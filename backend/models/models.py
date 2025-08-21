@@ -39,6 +39,8 @@ class User(Base):
         default=datetime.now(timezone.utc),
         onupdate=datetime.now(timezone.utc),
     )
+    failed_login_attempts = Column(Integer, nullable=False, default=0)
+    lock_login_until = Column(DateTime(timezone=True), nullable=True)
 
     def set_password(self, password):
         """Hashes and sets the user's password."""
