@@ -117,6 +117,10 @@ def login():
             )
             session.commit()
 
+            
+            user.failed_login_attempts = 0
+            session.commit()
+            
             # create new access and refresh tokens
             response = make_response(jsonify({"message": "Login successful"}))
 
