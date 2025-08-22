@@ -85,70 +85,68 @@ def login():
     # check for required fields
     required_fields = ["email", "password"]
     check_required_fields(data, required_fields)
-    validate_email_format(data["email"])
+    
+    email = data["email"].strip().lower()
+    validate_email_format(email)
 
-    try:
-        with Session() as session:
-            # check if email exists in database
-            user = session.query(User).filter_by(email=data["email"]).first()
-            if not user:
-                raise UserNotFoundError()
+    with Session() as session:
+        # check if email exists in database
+        user = session.execute(
+            select(User).where(User.email == email)
+        ).scalar_one_or_none()
+        if not user:
+            raise UserNotFoundError()
 
-            # check if accont is blocked
-            retry_after = check_user_locked(session, user)
-            if retry_after is not None:
-                time = user.lock_login_until.astimezone(timezone.utc)
-                raise AccountLockError(time)
+        # check if accont is blocked
+        retry_after = check_user_locked(session, user)
+        if retry_after is not None:
+            time = user.lock_login_until.astimezone(timezone.utc)
+            raise AccountLockError(time)
 
-            # check if password is correct
-            if not user.check_password(data["password"]):
-                attempts = (user.failed_login_attempts or 0) + 1
-                user.failed_login_attempts = attempts
+        # check if password is correct
+        if not user.check_password(data["password"]):
+            attempts = (user.failed_login_attempts or 0) + 1
+            user.failed_login_attempts = attempts
 
-                limit = current_app.config["LOCKOUT_ATTEMPTS"]
-                if attempts >= limit:
-                    duration = current_app.config["LOCKOUT_DURATION_SECONDS"]
-                    db_now = session.execute(
-                        select(func.now())
-                    ).scalar_one()  # get DB time
-                    user.failed_login_attempts = 0
-                    user.lock_login_until = db_now + timedelta(seconds=duration)
-                    session.commit()
+            limit = current_app.config["LOCKOUT_ATTEMPTS"]
+            if attempts >= limit:
+                duration = current_app.config["LOCKOUT_DURATION_SECONDS"]
+                db_now = session.execute(
+                    select(func.now())
+                ).scalar_one()  # get DB time
+                user.failed_login_attempts = 0
+                user.lock_login_until = db_now + timedelta(seconds=duration)
                 session.commit()
-                raise InvalidCredentialsError()
-
-            # revoke all existing refresh tokens before generating a new one
-            session.query(RefreshToken).filter(
-                RefreshToken.user_id == user.id, RefreshToken.is_revoked == False
-            ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
             session.commit()
+            raise InvalidCredentialsError()
 
-            user.failed_login_attempts = 0
-            session.commit()
+        # revoke all existing refresh tokens before generating a new one
+        session.query(RefreshToken).filter(
+            RefreshToken.user_id == user.id, RefreshToken.is_revoked == False
+        ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
+        session.commit()
 
-            # create new access and refresh tokens
-            response = make_response(jsonify({"message": "Login successful"}))
+        user.failed_login_attempts = 0
+        session.commit()
 
-            response = create_token(
-                response=response,
-                token_name="access_token",
-                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
-                user_info=user,
-            )
+        # create new access and refresh tokens
+        response = make_response(jsonify({"message": "Login successful"}))
 
-            response = create_token(
-                response=response,
-                token_name="refresh_token",
-                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
-                user_info=user,
-            )
+        response = create_token(
+            response=response,
+            token_name="access_token",
+            expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
+            user_info=user,
+        )
 
-            return response
+        response = create_token(
+            response=response,
+            token_name="refresh_token",
+            expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
+            user_info=user,
+        )
 
-    except (UserNotFoundError, InvalidCredentialsError, AccountLockError):
-        raise
-    except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
+        return response
 
 
 @auth_bp.route("/api/users", methods=["GET"])
