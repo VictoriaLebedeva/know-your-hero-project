@@ -37,33 +37,39 @@ def register():
 
     required_fields = ["email", "name", "password"]
     check_required_fields(data, required_fields)
-    validate_email_format(data["email"])
+    
+    email = data["email"].strip().lower()
+    validate_email_format(email)
 
-    try:
-        with Session() as session:
-            # check if a user with the given email already exists
-            if session.query(User).filter_by(email=data["email"]).first():
-                raise EmailExistsError()
+    with Session.begin() as session:
+        # check if a user with the given email already exists
+        if session.execute(select(User.id).where(User.email == email)).scalar_one_or_none():
+            raise EmailExistsError()
 
-            # create a new user instance
-            new_user = User(
-                id=str(uuid.uuid4()),
-                email=data["email"],
-                name=data["name"],
-                role=data.get("role", "colleague"),
-            )
-            new_user.set_password(data["password"])
+        # create a new user instance
+        new_user = User(
+            email=email,
+            name=data["name"].strip(),
+            role="colleague",
+        )
+        new_user.set_password(data["password"])
+        
+        session.add(new_user)
+        session.flush()
+        session.refresh(new_user, attribute_names=["created_at", "id"])
 
-            session.add(new_user)
-            session.commit()
-
-    except EmailExistsError:
-        raise
-    except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing review data")
-
-    return jsonify({"message": "User created successfully"}), 201
+        return (
+            jsonify(
+                {
+                    "id": str(new_user.id),
+                    "email": new_user.email,
+                    "name": new_user.name,
+                    "role": new_user.role,
+                    "created_at": new_user.created_at if new_user.created_at else None,
+                }
+            ),
+            201,
+        )
 
 
 @auth_bp.route("/api/auth/login", methods=["POST"])
@@ -141,7 +147,6 @@ def login():
         raise
     except Exception as e:
         current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing review data")
 
 
 @auth_bp.route("/api/users", methods=["GET"])
@@ -156,7 +161,7 @@ def get_users():
             users = session.query(User).filter(User.id != user_id)
             return jsonify(
                 [
-                    {"id": user.id, "name": user.name, "email": user.email}
+                    {"id": str(user.id), "name": user.name, "email": user.email}
                     for user in users
                 ]
             )

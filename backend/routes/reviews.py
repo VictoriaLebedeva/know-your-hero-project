@@ -1,6 +1,8 @@
 import uuid
 
 from flask import Blueprint, request, jsonify
+from sqlalchemy import select
+
 from models.models import Session, Review, User
 from errors.api_errors import (
     SelfReviewNotAllowedError,
@@ -43,7 +45,7 @@ def create_review():
         raise SelfReviewNotAllowedError()
 
     with Session.begin() as session:
-        target_user = session.query(User).filter_by(id=data["recipient_id"]).first()
+        target_user = session.get(User, data["recipient_id"])
         if not target_user:
             raise ReviewTargetNotFoundError(data["recipient_id"])
 
@@ -80,7 +82,8 @@ def list_reviews():
 
     verify_token(request, "access_token")
     with Session() as session:
-        reviews = session.query(Review).order_by(Review.created_at.desc()).all()
+        reviews = session.scalars(select(Review).order_by(Review.created_at.desc())).all()
+
         reviews_data = [
             {
                 "id": review.id,

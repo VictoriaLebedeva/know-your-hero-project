@@ -71,7 +71,7 @@ def create_token(response, token_name, expiry, user_info):
     new_token = jwt.encode(
         {
             "jti": jti,
-            "user_id": user_info.id,
+            "user_id": str(user_info.id),
             "role": user_info.role,
             "exp": expiration_date,
         },
@@ -91,7 +91,7 @@ def create_token(response, token_name, expiry, user_info):
         try:
             with Session() as session:
                 new_refresh_token = RefreshToken(
-                    id=jti, user_id=user_info.id, expires_at=expiration_date
+                    id=jti, user_id=str(user_info.id), expires_at=expiration_date
                 )
                 new_refresh_token.set_token(new_token)
                 session.add(new_refresh_token)
@@ -120,11 +120,9 @@ def revoke_refresh_token(jti, session):
 def validate_email_format(email):
     """Validates the format of an email address."""
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    try:
-        if not bool(re.match(pattern, email)):
-            raise InvalidEmailFormat()
-    except InvalidEmailFormat:
-        raise
+
+    if not bool(re.match(pattern, email)):
+        raise InvalidEmailFormat()
 
 
 def check_user_locked(session, user):

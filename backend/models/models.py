@@ -1,9 +1,10 @@
 import os
 from datetime import datetime, timezone
 
-from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, relationship, mapped_column
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, text
 from sqlalchemy import create_engine
+from sqlalchemy.dialects.postgresql import UUID
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # load variables for database connection
@@ -28,7 +29,11 @@ class User(Base):
     __tablename__ = "users"
 
     # Define table attributes
-    id = Column(String(36), primary_key=True)
+    id = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
     email = Column(String(120), nullable=False, unique=True)
     name = Column(String(256), nullable=False)
     password_hash = Column(String(256), nullable=False)
@@ -57,7 +62,11 @@ class RefreshToken(Base):
     __tablename__ = "refresh_token"
 
     id = Column(String(36), primary_key=True)
-    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     token_hash = Column(String(512), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_revoked = Column(Boolean, default=False, nullable=False)
@@ -83,11 +92,15 @@ class Review(Base):
     positive = Column(String(1000))
     negative = Column(String(1000))
     recipient_id = Column(
-        String(36), ForeignKey("users.id"), nullable=False
-    )  # User being reviewed
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     author_id = Column(
-        String(36), ForeignKey("users.id"), nullable=False
-    )  # User who wrote the review
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     # relationships
