@@ -95,7 +95,7 @@ def login():
             select(User).where(User.email == email)
         ).scalar_one_or_none()
         if not user:
-            raise UserNotFoundError()
+            raise InvalidCredentialsError()
 
         # check if accont is blocked
         retry_after = check_user_locked(session, user)
@@ -123,7 +123,7 @@ def login():
 
         # revoke all existing refresh tokens before generating a new one
         session.query(RefreshToken).filter(
-            RefreshToken.user_id == user.id, RefreshToken.is_revoked == False
+            RefreshToken.user_id == user.id, RefreshToken.is_revoked.is_(False)
         ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
 
         user.failed_login_attempts = 0
