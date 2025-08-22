@@ -100,3 +100,7 @@ docker-compose up --build
 ## License
 
 This project is for educational and practice purposes only.
+
+## Image Credits
+
+Vectors and icons by [Vectordoodle](#maybeCitation:<https://vectordoodle.gumroad.com/l/FOCLd?ref=svgrepo.com>) in CC Attribution License via [SVG Repo](#maybeCitation:<https://www.svgrepo.com/>)

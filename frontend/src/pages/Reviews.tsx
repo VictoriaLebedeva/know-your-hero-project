@@ -39,13 +39,13 @@ const Reviews: FC = () => {
                     <Button>+ Add Review</Button>
                 </Link>
                 {reviews.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center text-gray-500 w-full flex-1">
+                    <div className="flex flex-col items-center justify-center w-full flex-1">
                         <img
-                            src="\no-data.svg"
+                            src="\sad-sitting-svgrepo-com.svg"
                             alt="No reviews"
-                            className="w-16 h-16 mb-4 text-gray-500"
+                            className="w-16 h-16"
                         />
-                        <p className="text-gray-600 text-m font-semibold">No reviews</p>
+                        <p className="text-m font-semibold">No reviews</p>
                     </div>
                 ) : (
                     <Table className="w-full text-left">
