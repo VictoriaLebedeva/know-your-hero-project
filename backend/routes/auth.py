@@ -100,15 +100,14 @@ def login():
         # check if accont is blocked
         retry_after = check_user_locked(session, user)
         if retry_after is not None:
-            time = user.lock_login_until.astimezone(timezone.utc)
-            raise AccountLockError(time)
+            lock_until_utc = user.lock_login_until.astimezone(timezone.utc)
+            raise AccountLockError(lock_until_utc)
 
         # check if password is correct
         if not user.check_password(data["password"]):
             attempts = (user.failed_login_attempts or 0) + 1
-            user.failed_login_attempts = attempts
-
             limit = current_app.config["LOCKOUT_ATTEMPTS"]
+            
             if attempts >= limit:
                 duration = current_app.config["LOCKOUT_DURATION_SECONDS"]
                 db_now = session.execute(
@@ -116,7 +115,9 @@ def login():
                 ).scalar_one()  # get DB time
                 user.failed_login_attempts = 0
                 user.lock_login_until = db_now + timedelta(seconds=duration)
-                session.commit()
+            else: 
+                user.failed_login_attempts = attempts
+            
             session.commit()
             raise InvalidCredentialsError()
 
@@ -124,9 +125,9 @@ def login():
         session.query(RefreshToken).filter(
             RefreshToken.user_id == user.id, RefreshToken.is_revoked == False
         ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
-        session.commit()
 
         user.failed_login_attempts = 0
+        user.lock_login_until = None
         session.commit()
 
         # create new access and refresh tokens
