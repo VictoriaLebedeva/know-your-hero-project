@@ -158,18 +158,14 @@ def get_users():
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
-    try:
-        with Session() as session:
-            users = session.query(User).filter(User.id != user_id)
-            return jsonify(
-                [
-                    {"id": str(user.id), "name": user.name, "email": user.email}
-                    for user in users
-                ]
-            )
-    except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing review data")
+    with Session() as session:
+        users = session.execute(select(User).where(User.id != user_id)).scalars().all()
+        return jsonify(
+            [
+                {"id": str(user.id), "name": user.name, "email": user.email}
+                for user in users
+            ]
+        )
 
 
 @auth_bp.route("/api/me", methods=["GET"])
