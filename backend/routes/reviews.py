@@ -42,7 +42,7 @@ def create_review():
     if user_id == data["recipient_id"]:
         raise SelfReviewNotAllowedError()
 
-    with Session() as session:
+    with Session.begin() as session:
         target_user = session.query(User).filter_by(id=data["recipient_id"]).first()
         if not target_user:
             raise ReviewTargetNotFoundError(data["recipient_id"])
@@ -54,10 +54,24 @@ def create_review():
             recipient_id=target_user.id,
             author_id=user_id,
         )
+        
         session.add(new_review)
-        session.commit()
+        session.flush()
+        session.refresh(new_review, attribute_names=["created_at"])
 
-        return jsonify({"message": "Review created successfully"}), 201
+        return (
+            jsonify(
+                {
+                    "id": new_review.id,
+                    "positive": new_review.positive,
+                    "negative": new_review.negative,
+                    "recipient_id": new_review.recipient_id,
+                    "author_id": new_review.author_id,
+                    "created_at": new_review.created_at if new_review.created_at else None,
+                }
+            ),
+            201,
+        )
 
 
 @reviews_bp.route("/api/reviews", methods=["GET"])
