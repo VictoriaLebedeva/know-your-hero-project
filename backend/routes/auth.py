@@ -175,27 +175,20 @@ def get_user():
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
 
-    try:
-        with Session() as session:
+    with Session() as session:
+        user = session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not user:
+            raise UserNotFoundError()
 
-            user = session.query(User).filter_by(id=user_id).first()
-            if not user:
-                raise UserNotFoundError()
-
-            return jsonify(
-                {
-                    "id": user.id,
-                    "name": user.name,
-                    "email": user.email,
-                    "role": user.role,
-                    "created_at": user.created_at.isoformat(),
-                }
-            )
-    except UserNotFoundError:
-        raise
-    except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing review data")
+        return jsonify(
+            {
+                "id": str(user.id),
+                "name": user.name,
+                "email": user.email,
+                "role": user.role,
+                "created_at": user.created_at,
+            }
+        ), 200
 
 
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
