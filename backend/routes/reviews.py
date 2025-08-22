@@ -90,7 +90,7 @@ def list_reviews():
                 "positive": review.positive,
                 "negative": review.negative,
                 "recipient_id": review.recipient_id,
-                "recipient_name": review.adresed.name,
+                "recipient_name": review.recipient.name,
                 "author_id": review.author_id,
                 "author_name": review.author.name,
                 "created_at": review.created_at,

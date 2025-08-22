@@ -56,7 +56,7 @@ def register():
         
         session.add(new_user)
         session.flush()
-        session.refresh(new_user, attribute_names=["created_at", "id"])
+        session.refresh(new_user, attribute_names=["id", "created_at"])
 
         return (
             jsonify(

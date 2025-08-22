@@ -61,7 +61,11 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_token"
 
-    id = Column(String(36), primary_key=True)
+    id = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -88,7 +92,11 @@ class Review(Base):
 
     __tablename__ = "reviews"
 
-    id = Column(String(36), primary_key=True)
+    id = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
     positive = Column(String(1000))
     negative = Column(String(1000))
     recipient_id = Column(
@@ -104,7 +112,7 @@ class Review(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     # relationships
-    adresed = relationship(
+    recipient = relationship(
         "User", foreign_keys=[recipient_id]
     )  # Connects to reviewed user
     author = relationship("User", foreign_keys=[author_id])  # Connects to review author
