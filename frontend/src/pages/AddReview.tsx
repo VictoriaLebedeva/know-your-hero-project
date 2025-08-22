@@ -23,14 +23,14 @@ import {
 type FormData = {
     positive: string;
     negative: string;
-    adresed_id: string | null;
+    recipient_id: string | null;
     author_id: string | null;
 };
 
 const initialFormData = {
     positive: "",
     negative: "",
-    adresed_id: null,
+    recipient_id: null,
     author_id: null,
 };
 
@@ -60,14 +60,14 @@ const AddReview: FC = () => {
     const handleColleagueChange = (value: string) => {
         setFormData((prev) => ({
             ...prev,
-            adresed_id: value,
+            recipient_id: value,
         }));
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
        
-        if (!formData.adresed_id) {
+        if (!formData.recipient_id) {
             toast.error("Please select a colleague before submitting");
             return;
         }
@@ -108,7 +108,7 @@ const AddReview: FC = () => {
                         <div className="w-full">
                             <p className="text-lg sm:text-xl font-semibold">Step 1</p>
                             <p className="text-base sm:text-xl">Choose colleague</p>
-                            <Select value={formData.adresed_id?.toString() ?? ""} onValueChange={handleColleagueChange}>
+                            <Select value={formData.recipient_id?.toString() ?? ""} onValueChange={handleColleagueChange}>
                                 <SelectTrigger className="w-full mt-6 sm:mt-8">
                                     <SelectValue placeholder="Select an option" />
                                 </SelectTrigger>

@@ -15,7 +15,7 @@ from errors.api_errors import (
     TokenNotFoundError,
     TokenRevokedError,
     InvalidEmailFormat,
-    TokenUserNotFoundError
+    TokenUserNotFoundError,
 )
 
 
@@ -46,15 +46,15 @@ def verify_token(request, token_name):
         decoded = jwt.decode(
             token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
         )
-        
+
         user_id = decoded.get("user_id")
-    
+
         with Session() as session:
             # check if email exists in database
             user = session.query(User).filter_by(id=user_id).first()
             if not user:
                 raise TokenUserNotFoundError()
-            
+
             return decoded
 
     except jwt.ExpiredSignatureError:
@@ -118,19 +118,20 @@ def revoke_refresh_token(jti, session):
 
 
 def validate_email_format(email):
-    """Validates the format of an email address."""    
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    """Validates the format of an email address."""
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     try:
         if not bool(re.match(pattern, email)):
             raise InvalidEmailFormat()
     except InvalidEmailFormat:
         raise
 
+
 def check_user_locked(session, user):
     if not user.lock_login_until:
         return None
 
-    db_now = session.execute(select(func.now())).scalar_one() # get DB time
+    db_now = session.execute(select(func.now())).scalar_one()  # get DB time
     if user.lock_login_until > db_now:
         return int((user.lock_login_until - db_now).total_seconds())
     return None

@@ -12,7 +12,7 @@ from errors.api_errors import (
     InvalidCredentialsError,
     TokenRevokedError,
     TokenNotFoundError,
-    AccountLockError
+    AccountLockError,
 )
 from utils.general_utils import check_required_fields
 from utils.auth_utils import (
@@ -20,7 +20,7 @@ from utils.auth_utils import (
     create_token,
     revoke_refresh_token,
     validate_email_format,
-    check_user_locked
+    check_user_locked,
 )
 
 # Initialize the Flask application
@@ -85,22 +85,24 @@ def login():
             user = session.query(User).filter_by(email=data["email"]).first()
             if not user:
                 raise UserNotFoundError()
-            
+
             # check if accont is blocked
             retry_after = check_user_locked(session, user)
             if retry_after is not None:
                 time = user.lock_login_until.astimezone(timezone.utc)
                 raise AccountLockError(time)
-            
+
             # check if password is correct
             if not user.check_password(data["password"]):
                 attempts = (user.failed_login_attempts or 0) + 1
                 user.failed_login_attempts = attempts
-                
+
                 limit = current_app.config["LOCKOUT_ATTEMPTS"]
                 if attempts >= limit:
                     duration = current_app.config["LOCKOUT_DURATION_SECONDS"]
-                    db_now = session.execute(select(func.now())).scalar_one() # get DB time
+                    db_now = session.execute(
+                        select(func.now())
+                    ).scalar_one()  # get DB time
                     user.failed_login_attempts = 0
                     user.lock_login_until = db_now + timedelta(seconds=duration)
                     session.commit()
@@ -109,18 +111,13 @@ def login():
 
             # revoke all existing refresh tokens before generating a new one
             session.query(RefreshToken).filter(
-                RefreshToken.user_id == user.id,
-                RefreshToken.is_revoked == False
-            ).update(
-                {RefreshToken.is_revoked: True},
-                synchronize_session=False
-            )
+                RefreshToken.user_id == user.id, RefreshToken.is_revoked == False
+            ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
             session.commit()
 
-            
             user.failed_login_attempts = 0
             session.commit()
-            
+
             # create new access and refresh tokens
             response = make_response(jsonify({"message": "Login successful"}))
 

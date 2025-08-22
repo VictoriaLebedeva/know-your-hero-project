@@ -44,11 +44,20 @@ class MissingFieldsError(APIError):
         super().__init__(message, 400, ErrorCodes.MISSING_FIELDS)
 
 
+class AtLeastOneNonEmptyError(APIError):
+    def __init__(self, fields=None):
+        message = "At least one of the field should be filled"
+        if fields:
+            message += f": {', '.join(fields)}"
+        super().__init__(message, 400, ErrorCodes.NON_EMPTY_ERROR)
+
+
 class EmailExistsError(APIError):
     def __init__(self):
         super().__init__(
             "User with this email already exists", 409, ErrorCodes.EMAIL_EXISTS
         )
+
 
 class AccountLockError(APIError):
     def __init__(self, time):
@@ -61,15 +70,18 @@ class AccountLockError(APIError):
 
     def to_response(self):
         return (
-            jsonify({
-                "error": {
-                    "code": self.error_code,
-                    "message": self.message,
-                    "time": str(self.time),
+            jsonify(
+                {
+                    "error": {
+                        "code": self.error_code,
+                        "message": self.message,
+                        "time": str(self.time),
+                    }
                 }
-            }),
+            ),
             self.status_code,
         )
+
 
 class UserNotFoundError(APIError):
     def __init__(self):
@@ -132,12 +144,14 @@ class TokenValidationError(APIError):
         super().__init__(
             f"Invalid {token} format", 400, ErrorCodes.TOKEN_ALREADY_REVOKED
         )
-    
-        
+
+
 class TokenUserNotFoundError(APIError):
     def __init__(self):
         super().__init__(
-            "User assosiated with token no longer exists", 401, ErrorCodes.TOKEN_ALREADY_REVOKED
+            "User assosiated with token no longer exists",
+            401,
+            ErrorCodes.TOKEN_ALREADY_REVOKED,
         )
 
 
@@ -168,7 +182,7 @@ class SelfReviewNotAllowedError(APIError):
             400,
             ErrorCodes.SELF_REVIEW_NOT_ALLOWED,
         )
-        
+
 
 class MaxLimitExceededError(APIError):
     def __init__(self, limit):
@@ -191,7 +205,7 @@ class ServerError(APIError):
 class DatabaseError(APIError):
     def __init__(self, detail=None):
         message = "Error retrieving/saving data. Please try again later"
-        
+
         if detail:
             message = f"Database error: {detail}"
         super().__init__(message, 500, ErrorCodes.DATABASE_ERROR)

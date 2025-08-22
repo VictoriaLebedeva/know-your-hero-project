@@ -82,7 +82,7 @@ class Review(Base):
     id = Column(String(36), primary_key=True)
     positive = Column(String(1000))
     negative = Column(String(1000))
-    adresed_id = Column(
+    recipient_id = Column(
         String(36), ForeignKey("users.id"), nullable=False
     )  # User being reviewed
     author_id = Column(
@@ -92,7 +92,7 @@ class Review(Base):
 
     # relationships
     adresed = relationship(
-        "User", foreign_keys=[adresed_id]
+        "User", foreign_keys=[recipient_id]
     )  # Connects to reviewed user
     author = relationship("User", foreign_keys=[author_id])  # Connects to review author
 

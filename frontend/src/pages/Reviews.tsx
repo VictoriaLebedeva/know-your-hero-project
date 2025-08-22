@@ -61,7 +61,7 @@ const Reviews: FC = () => {
                         <TableBody>
                             {reviews.map((review) => (
                                 <TableRow key={review.id}>
-                                    <TableCell className="font-medium">{review.adresed_name}</TableCell>
+                                    <TableCell className="font-medium">{review.recipient_name}</TableCell>
                                     <TableCell className="font-medium">{review.author_name}</TableCell>
                                     <TableCell className="w-[400px] break-words whitespace-normal">{review.positive}</TableCell>
                                     <TableCell className="w-[400px] break-words whitespace-normal">{review.negative}</TableCell>
