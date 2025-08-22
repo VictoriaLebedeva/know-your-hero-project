@@ -37,13 +37,15 @@ def register():
 
     required_fields = ["email", "name", "password"]
     check_required_fields(data, required_fields)
-    
+
     email = data["email"].strip().lower()
     validate_email_format(email)
 
     with Session.begin() as session:
         # check if a user with the given email already exists
-        if session.execute(select(User.id).where(User.email == email)).scalar_one_or_none():
+        if session.execute(
+            select(User.id).where(User.email == email)
+        ).scalar_one_or_none():
             raise EmailExistsError()
 
         # create a new user instance
@@ -53,7 +55,7 @@ def register():
             role="colleague",
         )
         new_user.set_password(data["password"])
-        
+
         session.add(new_user)
         session.flush()
         session.refresh(new_user, attribute_names=["id", "created_at"])
