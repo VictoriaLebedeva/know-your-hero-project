@@ -1,4 +1,3 @@
-import uuid
 from datetime import timezone, timedelta
 from sqlalchemy import select, func
 
@@ -8,7 +7,6 @@ from models.models import Session, User
 from errors.api_errors import (
     UserNotFoundError,
     EmailExistsError,
-    DatabaseError,
     InvalidCredentialsError,
     AccountLockError,
 )
