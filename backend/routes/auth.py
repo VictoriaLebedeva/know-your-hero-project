@@ -21,6 +21,8 @@ from utils.auth_utils import (
     revoke_refresh_token,
     validate_email_format,
     check_user_locked,
+    revoke_user_refresh_tokens,
+    create_auth_response
 )
 
 # Initialize the Flask application
@@ -121,33 +123,12 @@ def login():
             session.commit()
             raise InvalidCredentialsError()
 
-        # revoke all existing refresh tokens before generating a new one
-        session.query(RefreshToken).filter(
-            RefreshToken.user_id == user.id, RefreshToken.is_revoked.is_(False)
-        ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
+        revoke_user_refresh_tokens(session, user.id)
 
         user.failed_login_attempts = 0
-        user.lock_login_until = None
         session.commit()
 
-        # create new access and refresh tokens
-        response = make_response(jsonify({"message": "Login successful"}))
-
-        response = create_token(
-            response=response,
-            token_name="access_token",
-            expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
-            user_info=user,
-        )
-
-        response = create_token(
-            response=response,
-            token_name="refresh_token",
-            expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
-            user_info=user,
-        )
-
-        return response
+        return create_auth_response("Login successful", user)
 
 
 @auth_bp.route("/api/users", methods=["GET"])
@@ -199,47 +180,14 @@ def refresh():
     jti = token_payload.get("jti")
     user_id = token_payload.get("user_id")
 
-    try:
-        with Session() as session:
+    with Session() as session:
 
-            user = session.query(User).filter_by(id=user_id).first()
-            if not user:
-                raise UserNotFoundError()
+        user = session.get(User, user_id)
+        if not user:
+            raise UserNotFoundError()
 
-            revoke_refresh_token(jti, session)
-
-            response = make_response(jsonify({"message": "Token refresh successful"}))
-
-            # generate new access_token
-            response = create_token(
-                response=response,
-                token_name="access_token",
-                expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
-                user_info=user,
-            )
-
-            current_app.logger.error(
-                f"Config: {current_app.config['REFRESH_TOKEN_EXPIRES_SECONDS']}"
-            )
-
-            # generate new refresh_token
-            response = create_token(
-                response=response,
-                token_name="refresh_token",
-                expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
-                user_info=user,
-            )
-
-            return response
-
-    except (TokenRevokedError, TokenNotFoundError, UserNotFoundError):
-        raise
-    # except TokenRevokedError:
-    #     current_app.logger.error(f"A try to refresh with revoked token: {str(e)}")
-    except Exception as e:
-        current_app.logger.error(f"Unexpected error: {type(e).__name__}: {str(e)}")
-        # current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing token")
+        revoke_refresh_token(jti, session)
+        return create_auth_response("Token refresh successful", user)
 
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
@@ -261,24 +209,4 @@ def logout():
         current_app.logger.error(f"Database error: {str(e)}")
         raise DatabaseError("Error processing token")
     finally:
-        response = make_response(jsonify({"message": "Log Out successful!"}))
-
-        response.set_cookie(
-            "access_token",
-            value="",
-            max_age=0,
-            httponly=True,
-            secure=False,
-            samesite="Lax",
-        )
-
-        response.set_cookie(
-            "refresh_token",
-            value="",
-            max_age=0,
-            httponly=True,
-            secure=False,
-            samesite="Lax",
-        )
-
-        return response
+        return create_auth_response("Logout succesfull", logout=True)

@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone, timedelta
 
 from flask import current_app
+from flask import jsonify, make_response, current_app
 from sqlalchemy import select, func
 
 from models.models import RefreshToken, User, Session
@@ -48,7 +49,6 @@ def verify_token(request, token_name):
         )
 
         user_id = decoded.get("user_id")
-
         with Session() as session:
             # check if email exists in database
             user = session.query(User).filter_by(id=user_id).first()
@@ -133,3 +133,70 @@ def check_user_locked(session, user):
     if user.lock_login_until > db_now:
         return int((user.lock_login_until - db_now).total_seconds())
     return None
+
+
+def revoke_user_refresh_tokens(session, user_id):
+    """Revoke all active refresh tokens"""
+    session.query(RefreshToken).filter(
+        RefreshToken.user_id == user_id,
+        RefreshToken.is_revoked.is_(False)
+    ).update(
+        {RefreshToken.is_revoked: True},
+        synchronize_session=False
+    )
+    
+    
+def create_auth_response(user, message):
+    """Create response with access and refresh tokens"""
+    response = make_response(jsonify({"message": message}))
+
+    response = create_token(
+        response=response,
+        token_name="access_token",
+        expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
+        user_info=user,
+    )
+
+    response = create_token(
+        response=response,
+        token_name="refresh_token",
+        expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
+        user_info=user,
+    )
+
+    return response
+
+def create_auth_response(message, user=None, logout=False):
+    """
+    Response:
+    - if logout=True (or user is None), clear cookies
+    - else return access_token and refresh_token
+    """
+    response = make_response(jsonify({"message": message}))
+
+    if logout or user is None:
+        for name in ("access_token", "refresh_token"):
+            response.set_cookie(
+                name,
+                value="",
+                max_age=0,
+                httponly=True,
+                secure=False,
+                samesite="Lax"
+            )
+        return response
+
+    # create tokens
+    response = create_token(
+        response=response,
+        token_name="access_token",
+        expiry=current_app.config["ACCESS_TOKEN_EXPIRES_SECONDS"],
+        user_info=user,
+    )
+    response = create_token(
+        response=response,
+        token_name="refresh_token",
+        expiry=current_app.config["REFRESH_TOKEN_EXPIRES_SECONDS"],
+        user_info=user,
+    )
+    return response
