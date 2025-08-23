@@ -192,21 +192,10 @@ def refresh():
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
-    """Logs out the current user by clearing the authentication cookie
-    and revoking the refresh token in the database."""
-
-    token_payload = verify_token(request, "refresh_token")
-    jti = token_payload.get("jti")
-
     try:
-        with Session() as session:
+        payload = verify_token(request, "refresh_token")
+        jti = payload.get("jti")
+        with Session.begin() as session:
             revoke_refresh_token(jti, session)
-
-    except (TokenNotFoundError, TokenRevokedError) as e:
-        current_app.logger.error(f"Refresh Token Error: {str(e)}")
-        raise
-    except Exception as e:
-        current_app.logger.error(f"Database error: {str(e)}")
-        raise DatabaseError("Error processing token")
     finally:
-        return create_auth_response("Logout succesfull", logout=True)
+        return create_auth_response("Log Out", logout=True)
