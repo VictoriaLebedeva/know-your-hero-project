@@ -2,22 +2,19 @@ import uuid
 from datetime import timezone, timedelta
 from sqlalchemy import select, func
 
-from flask import Blueprint, request, jsonify, make_response, current_app
+from flask import Blueprint, request, jsonify, current_app
 
-from models.models import Session, User, RefreshToken
+from models.models import Session, User
 from errors.api_errors import (
     UserNotFoundError,
     EmailExistsError,
     DatabaseError,
     InvalidCredentialsError,
-    TokenRevokedError,
-    TokenNotFoundError,
     AccountLockError,
 )
 from utils.general_utils import check_required_fields
 from utils.auth_utils import (
     verify_token,
-    create_token,
     revoke_refresh_token,
     validate_email_format,
     check_user_locked,
