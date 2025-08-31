@@ -1,3 +1,4 @@
+import jwt
 from datetime import timezone, timedelta
 from sqlalchemy import select, func
 
@@ -17,7 +18,8 @@ from utils.auth_utils import (
     validate_email_format,
     check_user_locked,
     revoke_user_refresh_tokens,
-    create_auth_response
+    create_auth_response,
+    decode_token
 )
 
 # Initialize the Flask application
@@ -187,10 +189,26 @@ def refresh():
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
+
+    refresh_token = request.cookies.get("refresh_token")
+    response = create_auth_response("Log Out", logout=True)
+    
+    if not refresh_token:
+        return response
+    
     try:
-        payload = verify_token(request, "refresh_token")
+        payload = decode_token(refresh_token, verify_exp=False)
         jti = payload.get("jti")
-        with Session.begin() as session:
-            revoke_refresh_token(jti, session)
-    finally:
-        return create_auth_response("Log Out", logout=True)
+        
+        if jti:
+            with Session.begin() as session:
+                revoke_refresh_token(jti, session)
+        return response
+    except jwt.InvalidSignatureError:
+        current_app.logger.warning("Logout: refresh token signature invalid. Revocation skipped. Cookies cleared.")
+        return response
+    except Exception:
+        return response
+    
+    
+

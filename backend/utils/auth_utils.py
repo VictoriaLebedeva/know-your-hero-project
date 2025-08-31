@@ -35,6 +35,15 @@ def generate_jwt(user_id, role, expiry):
     return new_token, jti, expiration_date
 
 
+def decode_token(token, verify_exp=True):
+    return jwt.decode(
+        token,
+        current_app.config["SECRET_KEY"],
+        algorithms=["HS256"],
+        options={"verify_exp": verify_exp}
+    )
+        
+
 def verify_token(request, token_name):
     """Validates JWT token from cookie"""
 
@@ -44,9 +53,7 @@ def verify_token(request, token_name):
         raise MissingTokenError(token_name)
 
     try:
-        decoded = jwt.decode(
-            token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-        )
+        decoded = decode_token(token)
 
         user_id = decoded.get("user_id")
         with Session() as session:
