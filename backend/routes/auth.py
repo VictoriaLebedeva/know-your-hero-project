@@ -1,26 +1,25 @@
+from datetime import timedelta, timezone
+
 import jwt
-from datetime import timezone, timedelta
-from sqlalchemy import select, func
-
-from flask import Blueprint, request, jsonify, current_app
-
-from models.models import Session, User
 from errors.api_errors import (
-    UserNotFoundError,
+    AccountLockError,
     EmailExistsError,
     InvalidCredentialsError,
-    AccountLockError,
+    UserNotFoundError,
+)
+from flask import Blueprint, current_app, jsonify, request
+from models.models import Session, User
+from sqlalchemy import func, select
+from utils.auth_utils import (
+    check_user_locked,
+    create_auth_response,
+    decode_token,
+    revoke_refresh_token,
+    revoke_user_refresh_tokens,
+    validate_email_format,
+    verify_token,
 )
 from utils.general_utils import check_required_fields
-from utils.auth_utils import (
-    verify_token,
-    revoke_refresh_token,
-    validate_email_format,
-    check_user_locked,
-    revoke_user_refresh_tokens,
-    create_auth_response,
-    decode_token
-)
 
 # Initialize the Flask application
 auth_bp = Blueprint("auth_bp", __name__)
@@ -84,7 +83,7 @@ def login():
     # check for required fields
     required_fields = ["email", "password"]
     check_required_fields(data, required_fields)
-    
+
     email = data["email"].strip().lower()
     validate_email_format(email)
 
@@ -106,17 +105,15 @@ def login():
         if not user.check_password(data["password"]):
             attempts = (user.failed_login_attempts or 0) + 1
             limit = current_app.config["LOCKOUT_ATTEMPTS"]
-            
+
             if attempts >= limit:
                 duration = current_app.config["LOCKOUT_DURATION_SECONDS"]
-                db_now = session.execute(
-                    select(func.now())
-                ).scalar_one()  # get DB time
+                db_now = session.execute(select(func.now())).scalar_one()  # get DB time
                 user.failed_login_attempts = 0
                 user.lock_login_until = db_now + timedelta(seconds=duration)
-            else: 
+            else:
                 user.failed_login_attempts = attempts
-            
+
             session.commit()
             raise InvalidCredentialsError()
 
@@ -153,19 +150,24 @@ def get_user():
     user_id = token_payload.get("user_id")
 
     with Session() as session:
-        user = session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = session.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
         if not user:
             raise UserNotFoundError()
 
-        return jsonify(
-            {
-                "id": str(user.id),
-                "name": user.name,
-                "email": user.email,
-                "role": user.role,
-                "created_at": user.created_at,
-            }
-        ), 200
+        return (
+            jsonify(
+                {
+                    "id": str(user.id),
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "created_at": user.created_at,
+                }
+            ),
+            200,
+        )
 
 
 @auth_bp.route("/api/auth/refresh", methods=["POST"])
@@ -192,23 +194,22 @@ def logout():
 
     refresh_token = request.cookies.get("refresh_token")
     response = create_auth_response("Log Out", logout=True)
-    
+
     if not refresh_token:
         return response
-    
+
     try:
         payload = decode_token(refresh_token, verify_exp=False)
         jti = payload.get("jti")
-        
+
         if jti:
             with Session.begin() as session:
                 revoke_refresh_token(jti, session)
         return response
     except jwt.InvalidSignatureError:
-        current_app.logger.warning("Logout: refresh token signature invalid. Revocation skipped. Cookies cleared.")
+        current_app.logger.warning(
+            "Logout: refresh token signature invalid. Revocation skipped. Cookies cleared."
+        )
         return response
     except Exception:
         return response
-    
-    
-

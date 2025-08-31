@@ -40,9 +40,9 @@ def decode_token(token, verify_exp=True):
         token,
         current_app.config["SECRET_KEY"],
         algorithms=["HS256"],
-        options={"verify_exp": verify_exp}
+        options={"verify_exp": verify_exp},
     )
-        
+
 
 def verify_token(request, token_name):
     """Validates JWT token from cookie"""
@@ -145,14 +145,10 @@ def check_user_locked(session, user):
 def revoke_user_refresh_tokens(session, user_id):
     """Revoke all active refresh tokens"""
     session.query(RefreshToken).filter(
-        RefreshToken.user_id == user_id,
-        RefreshToken.is_revoked.is_(False)
-    ).update(
-        {RefreshToken.is_revoked: True},
-        synchronize_session=False
-    )
-    
-    
+        RefreshToken.user_id == user_id, RefreshToken.is_revoked.is_(False)
+    ).update({RefreshToken.is_revoked: True}, synchronize_session=False)
+
+
 def create_auth_response(user, message):
     """Create response with access and refresh tokens"""
     response = make_response(jsonify({"message": message}))
@@ -173,6 +169,7 @@ def create_auth_response(user, message):
 
     return response
 
+
 def create_auth_response(message, user=None, logout=False):
     """
     Response:
@@ -184,12 +181,7 @@ def create_auth_response(message, user=None, logout=False):
     if logout or user is None:
         for name in ("access_token", "refresh_token"):
             response.set_cookie(
-                name,
-                value="",
-                max_age=0,
-                httponly=True,
-                secure=False,
-                samesite="Lax"
+                name, value="", max_age=0, httponly=True, secure=False, samesite="Lax"
             )
         return response
 

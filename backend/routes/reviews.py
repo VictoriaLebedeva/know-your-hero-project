@@ -1,17 +1,16 @@
 import uuid
 
-from flask import Blueprint, request, jsonify
-from sqlalchemy import select
-
-from models.models import Session, Review, User
 from errors.api_errors import (
-    SelfReviewNotAllowedError,
-    ReviewTargetNotFoundError,
-    MaxLimitExceededError,
     AtLeastOneNonEmptyError,
+    MaxLimitExceededError,
+    ReviewTargetNotFoundError,
+    SelfReviewNotAllowedError,
 )
-from utils.general_utils import check_required_fields
+from flask import Blueprint, jsonify, request
+from models.models import Review, Session, User
+from sqlalchemy import select
 from utils.auth_utils import verify_token
+from utils.general_utils import check_required_fields
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
