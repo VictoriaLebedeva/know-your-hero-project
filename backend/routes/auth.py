@@ -180,7 +180,6 @@ def refresh():
     user_id = token_payload.get("user_id")
 
     with Session() as session:
-
         user = session.get(User, user_id)
         if not user:
             raise UserNotFoundError()
@@ -191,7 +190,6 @@ def refresh():
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
 def logout():
-
     refresh_token = request.cookies.get("refresh_token")
     response = create_auth_response("Log Out", logout=True)
 
