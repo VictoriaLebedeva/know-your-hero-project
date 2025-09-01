@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone, timedelta
 
 from flask import current_app
-from flask import jsonify, make_response, current_app
+from flask import jsonify, make_response
 from sqlalchemy import select, func
 
 from models.models import RefreshToken, User, Session

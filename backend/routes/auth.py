@@ -4,6 +4,7 @@ import jwt
 from errors.api_errors import (
     AccountLockError,
     EmailExistsError,
+    ExpiredTokenError,
     InvalidCredentialsError,
     UserNotFoundError,
 )
@@ -175,17 +176,29 @@ def refresh():
     """Refreshes the authentication token using the refresh token stored in cookies.
     If the refresh token is valid, a new access token and refresh token are issued."""
 
-    token_payload = verify_token(request, "refresh_token")
-    jti = token_payload.get("jti")
-    user_id = token_payload.get("user_id")
-
-    with Session() as session:
-        user = session.get(User, user_id)
-        if not user:
-            raise UserNotFoundError()
-
-        revoke_refresh_token(jti, session)
-        return create_auth_response("Token refresh successful", user)
+    token = request.cookies.get("refresh_token")
+    
+    try:
+        token_payload = verify_token(request, "refresh_token")
+        jti = token_payload.get("jti")
+        user_id = token_payload.get("user_id")
+        
+        with Session() as session:
+            user = session.get(User, user_id)
+            if not user:
+                raise UserNotFoundError()
+            revoke_refresh_token(jti, session)
+            return create_auth_response("Token refresh successful", user)
+        
+    except ExpiredTokenError:
+        current_app.logger.warning("This logic brunch")
+        payload = decode_token(token, verify_exp=False)
+        current_app.logger.warning(f"This logic brunch {payload}")
+        jti = payload.get("jti")
+        if jti:
+            with Session() as session:
+                revoke_refresh_token(jti, session)
+        raise
 
 
 @auth_bp.route("/api/auth/logout", methods=["POST"])
