@@ -79,7 +79,7 @@ const AddReview: FC = () => {
         }
 
         if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
-            toast.error("Review is too long (more than 1000 charachters). Please, be brief :)");
+            toast.error("Review is too long (more than 1000 characters). Please, be brief :)");
             return;
         }
 
