@@ -1,5 +1,4 @@
 from flask import jsonify
-from werkzeug.exceptions import HTTPException
 from errors.error_codes import ErrorCodes
 
 
@@ -124,7 +123,7 @@ class ExpiredTokenError(APIError):
 class TokenNotFoundError(APIError):
     def __init__(self):
         super().__init__(
-            f"Unauthorized: Refresh token is not found",
+            "Unauthorized: Refresh token is not found",
             401,
             ErrorCodes.TOKEN_NOT_FOUND,
         )
@@ -159,7 +158,7 @@ class TokenUserNotFoundError(APIError):
 class PermissionsError(APIError):
     def __init__(self):
         super().__init__(
-            f"You do not have permission to access this resource",
+            "You do not have permission to access this resource",
             403,
             ErrorCodes.INSUFFICIENT_PERMISSIONS,
         )
@@ -178,7 +177,7 @@ class ReviewTargetNotFoundError(APIError):
 class SelfReviewNotAllowedError(APIError):
     def __init__(self):
         super().__init__(
-            f"You cannot submit a review for yourself",
+            "You cannot submit a review for yourself",
             400,
             ErrorCodes.SELF_REVIEW_NOT_ALLOWED,
         )
@@ -191,7 +190,7 @@ class MaxLimitExceededError(APIError):
             400,
             ErrorCodes.MAX_LIMIT_EXCEEDED,
         )
-
+        
 
 # Server errors
 class ServerError(APIError):

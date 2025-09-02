@@ -43,7 +43,7 @@ def create_review():
     # check if user tries to create reviews about themselves
     if user_id == data["recipient_id"]:
         raise SelfReviewNotAllowedError()
-
+    
     with Session.begin() as session:
         target_user = session.get(User, data["recipient_id"])
         if not target_user:
