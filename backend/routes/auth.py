@@ -177,19 +177,19 @@ def refresh():
     If the refresh token is valid, a new access token and refresh token are issued."""
 
     token = request.cookies.get("refresh_token")
-    
+
     try:
         token_payload = verify_token(request, "refresh_token")
         jti = token_payload.get("jti")
         user_id = token_payload.get("user_id")
-        
+
         with Session() as session:
             user = session.get(User, user_id)
             if not user:
                 raise UserNotFoundError()
             revoke_refresh_token(jti, session)
             return create_auth_response("Token refresh successful", user)
-        
+
     except ExpiredTokenError:
         current_app.logger.warning("This logic brunch")
         payload = decode_token(token, verify_exp=False)

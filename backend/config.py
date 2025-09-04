@@ -32,7 +32,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    ACCESS_TOKEN_EXPIRES_SECONDS = 900  # 15 minutes 
+    ACCESS_TOKEN_EXPIRES_SECONDS = 900  # 15 minutes
     REFRESH_TOKEN_EXPIRES_SECONDS = 86400  # 1 day
     LOCKOUT_DURATION_SECONDS = int(
         os.environ.get("LOCKOUT_DURATION_SECONDS", 300)

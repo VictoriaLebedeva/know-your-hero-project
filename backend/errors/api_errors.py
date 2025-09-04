@@ -190,7 +190,7 @@ class MaxLimitExceededError(APIError):
             400,
             ErrorCodes.MAX_LIMIT_EXCEEDED,
         )
-        
+
 
 # Server errors
 class ServerError(APIError):

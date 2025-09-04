@@ -11,6 +11,7 @@ from models.models import Review, Session, User
 from sqlalchemy import select
 from utils.auth_utils import verify_token
 from utils.general_utils import check_required_fields
+from access.serializers import serialize_review_for_role
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
@@ -43,7 +44,7 @@ def create_review():
     # check if user tries to create reviews about themselves
     if user_id == data["recipient_id"]:
         raise SelfReviewNotAllowedError()
-    
+
     with Session.begin() as session:
         target_user = session.get(User, data["recipient_id"])
         if not target_user:
@@ -82,23 +83,14 @@ def create_review():
 def list_reviews():
     """Handles retrieving reviews."""
 
-    verify_token(request, "access_token")
+    payload = verify_token(request, "access_token")
+    role = payload.get("role", "guest")
+
     with Session() as session:
+
         reviews = session.scalars(
             select(Review).order_by(Review.created_at.desc())
         ).all()
 
-        reviews_data = [
-            {
-                "id": review.id,
-                "positive": review.positive,
-                "negative": review.negative,
-                "recipient_id": review.recipient_id,
-                "recipient_name": review.recipient.name,
-                "author_id": review.author_id,
-                "author_name": review.author.name,
-                "created_at": review.created_at,
-            }
-            for review in reviews
-        ]
+        reviews_data = [serialize_review_for_role(review, role) for review in reviews]
         return jsonify(reviews_data), 200
