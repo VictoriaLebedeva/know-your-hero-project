@@ -55,6 +55,9 @@ const Reviews: FC = () => {
         };
     }, []);
 
+    const showNegativeCol = reviews.some(r => r?.negative != null && String(r.negative).trim() !== "");
+    const showAuthorCol = reviews.some(r => r?.author_id != null && String(r.author_id).trim() !== "");
+
     return (
         <div className="flex flex-col min-h-screen px-[75px] pt-[55px] pb-[35px] bg-white">
             <Header />
@@ -106,9 +109,9 @@ const Reviews: FC = () => {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Hero</TableHead>
-                                <TableHead>Author</TableHead>
+                                {showAuthorCol && <TableHead>Author</TableHead>}
                                 <TableHead className="text-[#48973E]">Positive</TableHead>
-                                <TableHead className="text-[#973E42]">Negative</TableHead>
+                                {showNegativeCol && <TableHead className="text-[#973E42]">Negative</TableHead>}
                                 <TableHead>Created At</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -118,15 +121,16 @@ const Reviews: FC = () => {
                                     <TableCell className="font-medium">
                                         {review.recipient_name}
                                     </TableCell>
-                                    <TableCell className="font-medium">
+                                    {showAuthorCol && <TableCell className="font-medium">
                                         {review.author_name}
-                                    </TableCell>
+                                    </TableCell>}
                                     <TableCell className="w-[400px] break-words whitespace-normal">
                                         {review.positive}
                                     </TableCell>
-                                    <TableCell className="w-[400px] break-words whitespace-normal">
-                                        {review.negative}
-                                    </TableCell>
+                                    {showNegativeCol &&
+                                        <TableCell className="w-[400px] break-words whitespace-normal">
+                                            {review.negative}
+                                        </TableCell>}
                                     <TableCell>
                                         {new Date(review.created_at).toLocaleString("en-US", {
                                             year: "numeric",
