@@ -24,20 +24,19 @@ type FormData = {
     positive: string;
     negative: string;
     recipient_id: string | null;
-    author_id: string | null;
 };
 
 const initialFormData = {
     positive: "",
     negative: "",
-    recipient_id: null,
-    author_id: null,
+    recipient_id: null
 };
 
 const AddReview: FC = () => {
 
     const colleagues = useColleagueStore((s) => s.colleagues);
     const user = useUserStore((s) => s.user);
+    const isColleague = user?.role === 'colleague';
 
 
     const [formData, setFormData] = useState<FormData>(initialFormData)
@@ -66,32 +65,52 @@ const AddReview: FC = () => {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-       
+
         if (!formData.recipient_id) {
             toast.error("Please select a colleague before submitting");
             return;
         }
 
+        if (isColleague) {
+            if (!formData.positive?.trim()) {
+                toast.error("Please fill in the positive field");
+                return;
+            }
 
-        if (!formData.positive?.trim() && !formData.negative?.trim()) {
-            toast.error("Please fill in at least one of 'positive' or 'negative' fields");
-            return;
+            if (formData.positive?.length > 1000) {
+                toast.error("Review is too long (more than 1000 characters). Please, be brief :)");
+                return;
+            }
+        } else {
+            if (!formData.positive?.trim() && !formData.negative?.trim()) {
+                toast.error("Please fill in at least one of 'positive' or 'negative' fields");
+                return;
+            }
+
+            if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
+                toast.error("Review is too long (more than 1000 characters). Please, be brief :)");
+                return;
+            }
         }
 
-        if (formData.positive?.length > 1000 || formData.negative?.length > 1000) {
-            toast.error("Review is too long (more than 1000 characters). Please, be brief :)");
-            return;
+        let dataToSubmit;
+
+        if (isColleague) {
+            dataToSubmit = {
+                positive: formData.positive,
+                recipient_id: formData.recipient_id
+            };
+        } else {
+            dataToSubmit = {
+                ...formData
+            };
         }
-
-        const dataToSubmit = { ...formData, author_id: user?.id ?? null };
-
 
         try {
             await createReview(dataToSubmit);
             toast.success("Review successfully created!");
             setFormData({
-                ...initialFormData,
-                author_id: user?.id ?? null,
+                ...initialFormData
             });
 
         } catch (error: any) {
@@ -141,18 +160,20 @@ const AddReview: FC = () => {
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-2 mt-6 sm:mt-8">
-                                <p className="inline-flex justify-center bg-[#973E42] text-white text-sm font-medium rounded px-4 py-1 w-fit">
-                                    But
-                                </p>
-                                <Textarea
-                                    id="negative"
-                                    value={formData.negative}
-                                    onChange={handleChange}
-                                    placeholder="Any gossips?"
-                                    className="min-h-[120px] resize-none"
-                                />
-                            </div>
+                            {!isColleague && (
+                                <div className="flex flex-col gap-2 mt-6 sm:mt-8">
+                                    <p className="inline-flex justify-center bg-[#973E42] text-white text-sm font-medium rounded px-4 py-1 w-fit">
+                                        But
+                                    </p>
+                                    <Textarea
+                                        id="negative"
+                                        value={formData.negative}
+                                        onChange={handleChange}
+                                        placeholder="Any gossips?"
+                                        className="min-h-[120px] resize-none"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
 
