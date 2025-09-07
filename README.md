@@ -1,4 +1,4 @@
-# Web Application Security Practice
+# Know Your Hero
 
 A simple web application for practicing secure authentication, authorization, and review management using Flask (backend) and a modern frontend (see `frontend/`).
 
@@ -6,7 +6,7 @@ A simple web application for practicing secure authentication, authorization, an
 
 - User registration and login with JWT-based authentication
 - Secure cookie handling (HTTP-only, SameSite)
-- Role-based access (basic)
+- Role-based access
 - Add and view reviews for users
 - RESTful API endpoints
 - Input validation and error handling
@@ -72,7 +72,7 @@ To run both backend and frontend with Docker:
 docker-compose up --build
 ```
 
-## API Endpoints (TBD Можно сделать сваггер)
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` — Register a new user
