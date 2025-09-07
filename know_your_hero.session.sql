@@ -13,5 +13,5 @@ ORDER BY expires_at DESC
 
 
 UPDATE users
-SET role = 'guest'
+SET role = 'colleague'
 WHERE id = '148af71a-db71-4b1b-af37-279024aafe08'

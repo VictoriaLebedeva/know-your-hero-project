@@ -1,8 +1,11 @@
 import uuid
 
+from access.access import can_create_negative_review
+from access.serializers import serialize_review_for_role
 from errors.api_errors import (
     AtLeastOneNonEmptyError,
     MaxLimitExceededError,
+    PermissionsError,
     ReviewTargetNotFoundError,
     SelfReviewNotAllowedError,
 )
@@ -11,7 +14,6 @@ from models.models import Review, Session, User
 from sqlalchemy import select
 from utils.auth_utils import verify_token
 from utils.general_utils import check_required_fields
-from access.serializers import serialize_review_for_role
 
 # Initialize the Flask application
 reviews_bp = Blueprint("reviews_bp", __name__)
@@ -26,6 +28,7 @@ def create_review():
 
     token_payload = verify_token(request, "access_token")
     user_id = token_payload.get("user_id")
+    role = token_payload.get("role", "colleague")
 
     data = request.get_json()
 
@@ -40,6 +43,9 @@ def create_review():
     # check for character limit exceed
     if len(data["positive"]) > MAX_LEN or len(data["negative"]) > MAX_LEN:
         raise MaxLimitExceededError(MAX_LEN)
+
+    if "negative" in data and not can_create_negative_review(role):
+        raise PermissionsError("You don't have permissions to create negative review")
 
     # check if user tries to create reviews about themselves
     if user_id == data["recipient_id"]:
@@ -83,8 +89,8 @@ def create_review():
 def list_reviews():
     """Handles retrieving reviews."""
 
-    payload = verify_token(request, "access_token")
-    role = payload.get("role", "guest")
+    token_payload = verify_token(request, "access_token")
+    role = token_payload.get("role", "colleague")
 
     with Session() as session:
 

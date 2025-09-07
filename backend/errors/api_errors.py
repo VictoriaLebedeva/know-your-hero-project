@@ -156,9 +156,9 @@ class TokenUserNotFoundError(APIError):
 
 # Permission errors
 class PermissionsError(APIError):
-    def __init__(self):
+    def __init__(self, message=None):
         super().__init__(
-            "You do not have permission to access this resource",
+            message or "Insufficient permissions to perform this operation",
             403,
             ErrorCodes.INSUFFICIENT_PERMISSIONS,
         )
