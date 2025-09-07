@@ -33,18 +33,24 @@ def create_review():
     data = request.get_json()
 
     # check required fields
-    required_fields = ["recipient_id", "positive", "negative"]
+    required_fields = ["recipient_id", "positive"]
     check_required_fields(data, required_fields)
+    
+    # input normalization
+    positive = (data.get("positive") or "").strip()
+    negative = (data.get("negative") or "")
+    negative = negative.strip() if isinstance(negative, str) else ""
+    
 
     # any of positive or negative reviews should be filled
-    if not ((data["positive"] or "").strip() or (data["negative"] or "").strip()):
+    if not (positive or negative):
         raise AtLeastOneNonEmptyError(["positive", "negative"])
 
     # check for character limit exceed
-    if len(data["positive"]) > MAX_LEN or len(data["negative"]) > MAX_LEN:
+    if len(positive) > MAX_LEN or len(negative) > MAX_LEN:
         raise MaxLimitExceededError(MAX_LEN)
 
-    if "negative" in data and not can_create_negative_review(role):
+    if negative and not can_create_negative_review(role):
         raise PermissionsError("You don't have permissions to create negative review")
 
     # check if user tries to create reviews about themselves
@@ -58,8 +64,8 @@ def create_review():
 
         new_review = Review(
             id=str(uuid.uuid4()),
-            positive=data["positive"],
-            negative=data["negative"],
+            positive=positive,
+            negative=negative,
             recipient_id=target_user.id,
             author_id=user_id,
         )
